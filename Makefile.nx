@@ -63,7 +63,7 @@ EXEFS_SRC	:=	exefs_src
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv8-a -mtune=cortex-a57 -mtp=soft -fPIE -mcpu=cortex-a57+crc+fp+simd
 
-CFLAGS	:=	-g -Wall -O2 -fno-strict-aliasing -fomit-frame-pointer -ffunction-sections \
+CFLAGS	:=	-g -Wall -O3 -fno-strict-aliasing -fomit-frame-pointer -ffunction-sections \
 			$(ARCH) $(DEFINES)
 
 CFLAGS	+=	$(INCLUDE) -D__SWITCH__
