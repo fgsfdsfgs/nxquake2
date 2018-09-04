@@ -682,6 +682,10 @@ IN_Update(void)
 				/* Ignore back button, we dont need event for such button */
 				if (back_button_id == event.jbutton.button)
 					return;
+				/* Ignore pseudo buttons for analog stuff and SL/SR for now */
+				/* Also ignore ZL and ZR since those are handled as triggers */
+				if (event.jbutton.button >= 16 || event.jbutton.button == 8 || event.jbutton.button == 9)
+					break;
 				if (event.jbutton.button <= (K_JOY32 - K_JOY1))
 				{
 					Key_Event(event.jbutton.button + K_JOY1, down, true);
