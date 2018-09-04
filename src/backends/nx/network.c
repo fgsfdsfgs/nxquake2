@@ -185,7 +185,9 @@ void
 NET_Init()
 {
 	socketInitializeDefault();
+#ifdef DEBUG
 	nxlinkStdio();
+#endif
 }
 
 qboolean
