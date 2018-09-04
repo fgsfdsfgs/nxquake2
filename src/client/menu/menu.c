@@ -1071,11 +1071,17 @@ Keys_MenuKey(int key)
     {
     case K_KP_ENTER:
     case K_ENTER:
+#ifdef __SWITCH__
+    case K_JOY1:
+#endif
         KeyBindingFunc(item);
         return menu_in_sound;
     case K_BACKSPACE: /* delete bindings */
     case K_DEL: /* delete bindings */
     case K_KP_DEL:
+#ifdef __SWITCH__
+    case K_JOY3:
+#endif
         M_UnbindCommand(bindnames[item->generic.localdata[0]][0]);
         return menu_out_sound;
     default:
