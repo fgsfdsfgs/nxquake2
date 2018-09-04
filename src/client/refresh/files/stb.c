@@ -28,7 +28,11 @@
 
 #include <stdlib.h>
 
+#ifdef __SWITCH__
+#include "../soft_nx/header/local.h"
+#else
 #include "../gl1/header/local.h"
+#endif
 
 // don't need HDR stuff
 #define STBI_NO_LINEAR

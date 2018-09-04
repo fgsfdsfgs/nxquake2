@@ -769,6 +769,9 @@ FS_LoadPAK(const char *packPath)
 
 	Com_Printf("Added packfile '%s' (%i files).\n", pack->name, numFiles);
 
+#ifdef __SWITCH__
+	fclose(handle);
+#endif
 	return pack;
 }
 

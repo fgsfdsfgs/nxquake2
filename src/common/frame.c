@@ -146,7 +146,11 @@ Qcommon_Mainloop(void)
 	long long oldtime = Sys_Microseconds();
 
 	/* The mainloop. The legend. */
+#ifdef __SWITCH__
+	while (appletMainLoop())
+#else
 	while (1)
+#endif
 	{
 		// Throttle the game a little bit.
 		if (busywait->value)

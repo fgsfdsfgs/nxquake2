@@ -340,7 +340,11 @@ qboolean
 VID_LoadRefresh(void)
 {
 	refimport_t		ri;
+#ifdef __SWITCH__
+	extern refexport_t	GetRefAPI(refimport_t);
+#else
 	GetRefAPI_t		GetRefAPI;
+#endif
 
 #ifdef __APPLE__
 	const char* lib_ext = "dylib";
@@ -363,6 +367,7 @@ VID_LoadRefresh(void)
 	snprintf(reflib_path, sizeof(reflib_path), "%s%s", Sys_GetBinaryDir(), reflib_name);
 
 	Com_Printf("LoadLibrary(%s)\n", reflib_name);
+#ifndef __SWITCH__
 	GetRefAPI = Sys_LoadLibrary(reflib_path, "GetRefAPI", &reflib_handle);
 	if(GetRefAPI == NULL)
 	{
@@ -371,6 +376,7 @@ VID_LoadRefresh(void)
 
 		return false;
 	}
+#endif
 
 	ri.Cmd_AddCommand = Cmd_AddCommand;
 	ri.Cmd_RemoveCommand = Cmd_RemoveCommand;
@@ -429,8 +435,10 @@ VID_Shutdown(void)
 	{
 		/* Shut down the renderer */
 		re.Shutdown();
+#ifndef __SWITCH__
 		Sys_FreeLibrary(reflib_handle);
 		reflib_handle = NULL;
+#endif
 		memset(&re, 0, sizeof(re));
 	}
 

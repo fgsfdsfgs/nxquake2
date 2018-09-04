@@ -53,6 +53,10 @@
  #define CFGDIR ".yq2"
 #endif
 
+#ifdef __SWITCH__
+ #include <switch.h>
+#endif
+
 /* ================================================================== */
 
 typedef struct sizebuf_s

@@ -149,6 +149,7 @@ GetGameAPI(game_import_t *import)
  * this is only here so the functions
  * in shared source files can link
  */
+#ifndef __SWITCH__
 void
 Sys_Error(char *error, ...)
 {
@@ -174,6 +175,7 @@ Com_Printf(char *msg, ...)
 
 	gi.dprintf("%s", text);
 }
+#endif
 
 /* ====================================================================== */
 
