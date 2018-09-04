@@ -78,6 +78,7 @@ Sys_Error(char *error, ...)
 	}
 
 	if (SDL_WasInit(0)) SDL_Quit();
+	NET_Shutdown();
 	exit(1);
 }
 
@@ -99,6 +100,7 @@ Sys_Quit(void)
 	printf("------------------------------------\n");
 
 	if (SDL_WasInit(0)) SDL_Quit();
+	NET_Shutdown();
 	exit(0);
 }
 
