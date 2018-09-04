@@ -215,6 +215,57 @@ M_PushMenu(void (*draw)(void), const char *(*key)(int))
     cls.key_dest = key_menu;
 }
 
+#ifdef __SWITCH__
+int
+Key_GetMenuKey(int key)
+{
+	switch (key)
+	{
+		case K_KP_UPARROW:
+		case K_UPARROW:
+		case K_HAT_UP:
+		case K_JOY14:
+			return K_UPARROW;
+
+		case K_TAB:
+		case K_KP_DOWNARROW:
+		case K_DOWNARROW:
+		case K_HAT_DOWN:
+		case K_JOY16:
+			return K_DOWNARROW;
+
+		case K_KP_LEFTARROW:
+		case K_LEFTARROW:
+		case K_HAT_LEFT:
+		case K_TRIG_LEFT:
+		case K_JOY13:
+			return K_LEFTARROW;
+
+		case K_KP_RIGHTARROW:
+		case K_RIGHTARROW:
+		case K_HAT_RIGHT:
+		case K_TRIG_RIGHT:
+		case K_JOY15:
+			return K_RIGHTARROW;
+
+		case K_MOUSE1:
+		case K_MOUSE2:
+		case K_MOUSE3:
+		case K_MOUSE4:
+		case K_MOUSE5:
+		case K_JOY1:
+		case K_KP_ENTER:
+		case K_ENTER:
+			return K_ENTER;
+
+		case K_ESCAPE:
+		case K_JOY_BACK:
+			return K_ESCAPE;
+	}
+
+	return key;
+}
+#else
 int
 Key_GetMenuKey(int key)
 {
@@ -325,6 +376,7 @@ Key_GetMenuKey(int key)
 
 	return key;
 }
+#endif
 const char *
 Default_MenuKey(menuframework_s *m, int key)
 {
