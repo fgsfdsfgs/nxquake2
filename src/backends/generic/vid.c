@@ -109,6 +109,11 @@ vidmode_t vid_modes[] = {
 	{"Mode 29: 3840x2160", 3840, 2160, 29},
 	{"Mode 30: 4096x2160", 4096, 2160, 30},
 	{"Mode 31: 5120x2880", 5120, 2880, 31},
+#ifdef __SWITCH__
+	{"Mode 32: 640x360", 640, 360, 32},
+	{"Mode 33: 768x432", 768, 432, 33},
+	{"Mode 34: 1024x576", 1024, 576, 34},
+#endif
 };
 
 /* Console variables that we need to access from this module */

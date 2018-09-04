@@ -1438,24 +1438,14 @@ RE_SetSky (char *name, float rotate, vec3_t axis)
 {
 	int		i;
 	static char	pathname[MAX_QPATH];
-	Com_Printf("ayy lmao\r");
-
-	Com_Printf("RE_SetSky start %s %f\n", name, rotate);
 	strncpy (skyname, name, sizeof(skyname)-1);
-	Com_Printf("RE_SetSky 1 %s %f\n", name, rotate);
 	VectorCopy (axis, skyaxis);
-	Com_Printf("RE_SetSky 2 %s %f\n", name, rotate);
 
-	Com_Printf("RE_SetSky 3 %s %f\n", name, rotate);
 	for (i=0 ; i<6 ; i++)
 	{
-		Com_Printf("    iter %d\n", i);
 		Com_sprintf (pathname, sizeof(pathname), "env/%s%s.pcx", skyname, suf[r_skysideimage[i]]);
-		Com_Printf("    pathname %s\n", pathname);
 		r_skytexinfo[i].image = R_FindImage (pathname, it_sky);
-		Com_Printf("    img %p\n", r_skytexinfo[i].image);
 	}
-	Com_Printf("RE_SetSky end %s %f\n", name, rotate);
 }
 
 /*
