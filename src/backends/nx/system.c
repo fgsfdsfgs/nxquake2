@@ -69,7 +69,7 @@ Sys_Error(char *error, ...)
 #endif
 	Qcommon_Shutdown();
 
-	FILE *ferr = fopen("/switch/yquake2/crash.log", "w");
+	FILE *ferr = fopen("/switch/nxquake2/crash.log", "w");
 	if (ferr)
 	{
 		fprintf(ferr, "Error: %s\n", string);
@@ -390,7 +390,7 @@ Sys_GetHomeDir(void)
 {
 	static char gdir[MAX_OSPATH];
 
-	snprintf(gdir, sizeof(gdir), "/switch/yquake2/");
+	snprintf(gdir, sizeof(gdir), "/switch/nxquake2/");
 
 	return gdir;
 }

@@ -121,7 +121,7 @@ static void SetExecutablePath(char* exePath)
 
 #elif defined(__SWITCH__)
 
-	strncpy(exePath, "/switch/yquake2/", PATH_MAX);
+	strncpy(exePath, "/switch/nxquake2/", PATH_MAX);
 
 #else
 

@@ -102,7 +102,7 @@ printBacktrace(int sig)
 void
 signalhandler(int sig)
 {
-	flog = fopen("/switch/yquake2/crash.log", "w");
+	flog = fopen("/switch/nxquake2/crash.log", "w");
 	if (flog)
 	{
 		fprintf(flog, "\n=======================================================\n");
