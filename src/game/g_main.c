@@ -145,6 +145,7 @@ GetGameAPI(game_import_t *import)
 	return &globals;
 }
 
+#ifndef __SWITCH__
 /*
  * this is only here so the functions
  * in shared source files can link
@@ -174,6 +175,7 @@ Com_Printf(char *msg, ...)
 
 	gi.dprintf("%s", text);
 }
+#endif
 
 /* ====================================================================== */
 

@@ -1306,6 +1306,7 @@ SDL_BackendInit(void)
 	int sndfreq = (Cvar_Get("s_khz", "44", CVAR_ARCHIVE))->value;
 	int sndchans = (Cvar_Get("sndchannels", "2", CVAR_ARCHIVE))->value;
 
+#ifndef __SWITCH__
 #ifdef _WIN32
 	s_sdldriver = (Cvar_Get("s_sdldriver", "directsound", CVAR_ARCHIVE));
 #elif __linux__
@@ -1318,6 +1319,7 @@ SDL_BackendInit(void)
 
 	snprintf(reqdriver, sizeof(reqdriver), "%s=%s", "SDL_AUDIODRIVER", s_sdldriver->string);
 	putenv(reqdriver);
+#endif
 
 	Com_Printf("Starting SDL audio callback.\n");
 

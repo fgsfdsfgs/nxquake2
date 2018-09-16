@@ -119,6 +119,10 @@ static void SetExecutablePath(char* exePath)
 	// TODO: realpath() ?
 	// TODO: no idea what this is if the executable is in an app bundle
 
+#elif defined(__SWITCH__)
+
+	strncpy(exePath, "/switch/nxquake2/", PATH_MAX);
+  
 #else
 
 	// Several platforms (for example OpenBSD) donn't provide a

@@ -320,7 +320,9 @@ VID_ShutdownRenderer(void)
 		/* Shut down the renderer */
 		re.Shutdown();
 		GLimp_ShutdownGraphics();
+#ifndef __SWITCH__
 		Sys_FreeLibrary(reflib_handle);
+#endif
 		reflib_handle = NULL;
 		memset(&re, 0, sizeof(re));
 	}
@@ -336,7 +338,11 @@ qboolean
 VID_LoadRenderer(void)
 {
 	refimport_t	ri;
+#ifdef __SWITCH__
+	extern refexport_t	GetRefAPI(refimport_t);
+#else
 	GetRefAPI_t	GetRefAPI;
+#endif
 
 #ifdef __APPLE__
 	const char* lib_ext = "dylib";
@@ -360,6 +366,7 @@ VID_LoadRenderer(void)
 	snprintf(reflib_path, sizeof(reflib_path), "%s%s", Sys_GetBinaryDir(), reflib_name);
 	Com_Printf("LoadLibrary(%s)\n", reflib_name);
 
+#ifndef __SWITCH__
 	// Mkay, let's load the requested renderer.
 	GetRefAPI = Sys_LoadLibrary(reflib_path, "GetRefAPI", &reflib_handle);
 
@@ -371,6 +378,7 @@ VID_LoadRenderer(void)
 
 		return false;
 	}
+#endif
 
 	// Fill in the struct exported to the renderer.
 	// FIXME: Do we really need all these?

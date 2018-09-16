@@ -1623,6 +1623,9 @@ RE_InitContext(void *win)
 	snprintf(title, sizeof(title), "Yamagi Quake II %s - Soft Render", YQ2VERSION);
 	SDL_SetWindowTitle(window, title);
 
+#ifdef __SWITCH__
+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
+#else
 	if (r_vsync->value)
 	{
 		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
@@ -1631,6 +1634,7 @@ RE_InitContext(void *win)
 	{
 		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	}
+#endif
 
 	/* Select the color for drawing. It is set to black here. */
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
@@ -1908,6 +1912,7 @@ SWimp_CreateRender(void)
 	R_GammaCorrectAndSetPalette( ( const unsigned char * ) d_8to24table );
 }
 
+#ifndef __SWITCH__
 // this is only here so the functions in q_shared.c and q_shwin.c can link
 void
 Sys_Error (char *error, ...)
@@ -1934,6 +1939,7 @@ Com_Printf (char *fmt, ...)
 
 	R_Printf(PRINT_ALL, "%s", text);
 }
+#endif
 
 /*
 ==============================================================================
