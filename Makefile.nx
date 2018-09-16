@@ -32,7 +32,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 #---------------------------------------------------------------------------------
 APP_TITLE	:=	NXQuake2
 APP_AUTHOR	:=	fgsfds
-APP_VERSION	:=	0.1.0
+APP_VERSION	:=	0.2.0
 
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
@@ -64,7 +64,7 @@ SOURCEFILES	:=	src/client/sound/sdl.c \
 
 DATA		:=	data
 INCLUDES	:=	
-DEFINES		+=	-DYQ2OSTYPE=\"NX\" -DYQ2ARCH=\"arm64\" -DOGG -DSDL2 -DDEBUG \
+DEFINES		+=	-DYQ2OSTYPE=\"NX\" -DYQ2ARCH=\"arm64\" -DOGG -DSDL2 \
 				-DBUILD_DATE=\"666\" -DUSE_FILE32API
 EXEFS_SRC	:=	exefs_src
 #ROMFS	:=	romfs
