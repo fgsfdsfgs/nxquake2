@@ -145,6 +145,7 @@ ApplyChanges(void *unused)
 {
 	qboolean restart = false;
 
+#ifndef __SWITCH__
 	/* Renderer */
 	if (s_renderer_list.curvalue != GetRenderer())
 	{
@@ -179,6 +180,7 @@ ApplyChanges(void *unused)
 		/* Restarts automatically */
 		Cvar_SetValue("r_mode", -1);
 	}
+#endif
 
 	/* UI scaling */
 	if (s_uiscale_list.curvalue == 0)
