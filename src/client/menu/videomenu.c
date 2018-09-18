@@ -29,6 +29,10 @@
 #include "../../client/menu/header/qmenu.h"
 #include "header/qmenu.h"
 
+#ifdef __SWITCH__
+extern qboolean fb_big;
+#endif
+
 extern void M_ForceMenuOff(void);
 
 static cvar_t *r_mode;
@@ -59,6 +63,7 @@ static menulist_s s_msaa_list;
 static menuaction_s s_defaults_action;
 static menuaction_s s_apply_action;
 
+#ifndef __SWITCH__
 static int
 GetRenderer(void)
 {
@@ -82,6 +87,7 @@ GetRenderer(void)
 		return 3;
 	}
 }
+#endif
 
 static int
 GetCustomValue(menulist_s *list)
@@ -180,6 +186,9 @@ ApplyChanges(void *unused)
 		/* Restarts automatically */
 		Cvar_SetValue("r_mode", -1);
 	}
+#else
+	restart = (fb_big != s_mode_list.curvalue);
+	fb_big = s_mode_list.curvalue;
 #endif
 
 	/* UI scaling */
@@ -199,8 +208,10 @@ ApplyChanges(void *unused)
 		Cvar_SetValue("crosshair_scale", r_hudscale->value);
 	}
 
+#ifndef __SWITCH__
 	/* Restarts automatically */
 	Cvar_SetValue("vid_fullscreen", s_fs_box.curvalue);
+#endif
 
 	/* vertical sync */
 	if (r_vsync->value != s_vsync_list.curvalue)
@@ -241,13 +252,24 @@ VID_MenuInit(void)
 	int y = 0;
 
 	static const char *renderers[] = {
+#ifdef __SWITCH__
+			"[OpenGL 3.2]",
+#else
 			"[OpenGL 1.4]",
 			"[OpenGL 3.2]",
 			"[Software  ]",
 			"[Custom    ]",
+#endif
 			0
 	};
 
+#ifdef __SWITCH__
+	static const char *resolutions[] = {
+		"[1280 720  ]",
+		"[1920 1080 ]",
+		0
+	};
+#else
 	static const char *resolutions[] = {
 		"[320 240   ]",
 		"[400 300   ]",
@@ -284,6 +306,7 @@ VID_MenuInit(void)
 		"[custom    ]",
 		0
 	};
+#endif
 
 	static const char *uiscale_names[] = {
 		"auto",
@@ -304,9 +327,13 @@ VID_MenuInit(void)
 	};
 
 	static const char *fullscreen_names[] = {
+#ifdef __SWITCH__
+			"yes",
+#else
 			"no",
 			"keep resolution",
 			"switch resolution",
+#endif
 			0
 	};
 
@@ -382,7 +409,11 @@ VID_MenuInit(void)
 	s_renderer_list.generic.x = 0;
 	s_renderer_list.generic.y = (y = 0);
 	s_renderer_list.itemnames = renderers;
+#ifdef __SWITCH__
+	s_renderer_list.curvalue = 0;
+#else
 	s_renderer_list.curvalue = GetRenderer();
+#endif
 
 	s_mode_list.generic.type = MTYPE_SPINCONTROL;
 	s_mode_list.generic.name = "video mode";
@@ -390,6 +421,9 @@ VID_MenuInit(void)
 	s_mode_list.generic.y = (y += 10);
 	s_mode_list.itemnames = resolutions;
 
+#ifdef __SWITCH__
+	s_mode_list.curvalue = fb_big;
+#else
 	if (r_mode->value >= 0)
 	{
 		s_mode_list.curvalue = r_mode->value;
@@ -398,6 +432,7 @@ VID_MenuInit(void)
 	{
 		s_mode_list.curvalue = GetCustomValue(&s_mode_list);
 	}
+#endif
 
 	s_brightness_slider.generic.type = MTYPE_SLIDER;
 	s_brightness_slider.generic.name = "brightness";
@@ -448,7 +483,12 @@ VID_MenuInit(void)
 	s_fs_box.generic.x = 0;
 	s_fs_box.generic.y = (y += 10);
 	s_fs_box.itemnames = fullscreen_names;
+#ifdef __SWITCH__
+	s_fs_box.curvalue = 0;
+#else
 	s_fs_box.curvalue = (int)vid_fullscreen->value;
+#endif
+
 
 	s_vsync_list.generic.type = MTYPE_SPINCONTROL;
 	s_vsync_list.generic.name = "vertical sync";

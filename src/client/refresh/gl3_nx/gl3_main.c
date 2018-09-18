@@ -1099,6 +1099,9 @@ GL3_SetGL2D(void)
 	}
 #endif // 0
 
+	extern qboolean fb_big;
+	if (!fb_big) y += 360;
+
 	glViewport(x, y, w, h);
 
 	hmm_mat4 transMatr = HMM_Orthographic(0, vid.width, vid.height, 0, -99999, 99999);
@@ -1202,6 +1205,9 @@ SetupGL(void)
 		y2 = drawing_left_eye ? (y2 + vid.height) / 2 : (y2 / 2);
 	}
 #endif // 0
+
+	extern qboolean fb_big;
+	if (!fb_big) y2 += 360;
 
 	glViewport(x, y2, w, h);
 

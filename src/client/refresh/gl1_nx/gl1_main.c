@@ -786,6 +786,9 @@ R_SetupGL(void)
 		y2 = drawing_left_eye ? (y2 + vid.height) / 2 : (y2 / 2);
 	}
 
+	extern qboolean fb_big;
+	if (!fb_big) y2 += 360;
+
 	glViewport(x, y2, w, h);
 
 	/* set up projection matrix */
@@ -933,6 +936,9 @@ R_SetGL2D(void)
 		h =  h / 2;
 		y = drawing_left_eye ? h : 0;
 	}
+
+	extern qboolean fb_big;
+	if (!fb_big) y += 360;
 
 	glViewport(x, y, w, h);
 	glMatrixMode(GL_PROJECTION);
@@ -1644,6 +1650,9 @@ RI_BeginFrame(float camera_separation)
 		h =  h / 2;
 		y = drawing_left_eye ? h : 0;
 	}
+
+	extern qboolean fb_big;
+	if (!fb_big) y += 360;
 
 	glViewport(x, y, w, h);
 	glMatrixMode(GL_PROJECTION);
