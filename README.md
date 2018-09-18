@@ -26,8 +26,6 @@ You can install the libraries with `(dkp-)pacman`.
 
 Run `make -f Makefile.nx` in this directory to build `nxquake2.nro`.
 
-NOTE: building NXQuake2 currently (Sep 16 2018) requires building the latest commits of libnx and other aforementioned libraries. The current stable versions provided in the corresponding (dkp-)pacman packages might cause glitches and crashes in the hardware renderer.
-
 ## Installation and running
 
 Copy the `baseq2` directory from your Quake 2 installation to `/switch/nxquake2/`. Copy the NRO to the same directory. You can now run the game using Homebrew Launcher.
