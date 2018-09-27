@@ -147,6 +147,7 @@ DeinitEGL(void)
 {
 	if (s_display)
 	{
+		eglMakeCurrent(s_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 		if (s_context)
 		{
 			eglDestroyContext(s_display, s_context);
