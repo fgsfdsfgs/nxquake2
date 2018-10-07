@@ -377,7 +377,7 @@ GLimp_GetRefreshRate(void)
 
 	if (vid_displayrefreshrate->value > -1)
 	{
-		glimp_refreshRate = floor(vid_displayrefreshrate->value);
+		glimp_refreshRate = ceil(vid_displayrefreshrate->value);
 	}
 
 	/* Do this only once. We asume that no one will change their
@@ -389,7 +389,7 @@ GLimp_GetRefreshRate(void)
 
 		int i = SDL_GetWindowDisplayIndex(window);
 
-		if (i >= 0 && SDL_GetCurrentDisplayMode(i, &mode) == 0)
+		if(i >= 0 && SDL_GetCurrentDisplayMode(i, &mode) == 0)
 		{
 			glimp_refreshRate = mode.refresh_rate;
 		}
