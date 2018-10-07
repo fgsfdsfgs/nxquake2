@@ -415,3 +415,9 @@ Sys_SetWorkDir(char *path)
 
 	return false;
 }
+
+void
+Sys_Remove(const char *path)
+{
+	remove(path);
+}
