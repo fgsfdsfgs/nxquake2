@@ -20,7 +20,7 @@ LICENSE file for further information.
 
 You will need:
 * latest versions of devkitA64 and libnx;
-* switch-sdl2, switch-zlib, switch-mesa, switch-libdri_nouveau.
+* switch-sdl2, switch-zlib, switch-mesa, switch-libdrm_nouveau.
 
 You can install the libraries with `(dkp-)pacman`.
 
