@@ -29,62 +29,79 @@
  #define _GNU_SOURCE
 #endif
 
-#include <stdlib.h>
 #include <errno.h>
 #include <sys/time.h>
 #include <unistd.h>
 
 #include "../../../common/header/common.h"
 
+#if defined(__FreeBSD__) || defined(__OpenBSD__)
+ #include <machine/param.h>
+ #define MAP_ANONYMOUS MAP_ANON
+#endif
+
+#if defined(__APPLE__)
+ #include <sys/types.h>
+ #define MAP_ANONYMOUS MAP_ANON
+#endif
+
 byte *membase;
-int maxhunksize;
-int curhunksize;
+size_t maxhunksize;
+size_t curhunksize;
 
-void *Hunk_Begin(int maxsize)
+void *
+Hunk_Begin(int maxsize)
 {
-	// reserve a huge chunk of memory, but don't commit any yet
-	maxhunksize = maxsize;
+
+	/* reserve a huge chunk of memory, but don't commit any yet */
+	/* plus 32 bytes for cacheline */
+	maxhunksize = maxsize + sizeof(size_t) + 32;
 	curhunksize = 0;
-	membase = malloc(maxhunksize);
 
-	if (membase == NULL)
-		Sys_Error("Hunk: unable to allocate %d bytes", maxhunksize);
-	else
-		memset(membase, 0, maxhunksize);
+	membase = calloc(1, maxhunksize);
 
-	return membase;
+	if ((membase == NULL) || (membase == (byte *)-1))
+	{
+		Sys_Error("unable to allocate %d bytes", maxsize);
+	}
+
+	*((size_t *)membase) = curhunksize;
+
+	return membase + sizeof(size_t);
 }
 
-void *Hunk_Alloc(int size)
+void *
+Hunk_Alloc(int size)
 {
 	byte *buf;
 
-	// round to cacheline
-	size = (size+31)&~31;
+	/* round to cacheline */
+	size = (size + 31) & ~31;
 
 	if (curhunksize + size > maxhunksize)
+	{
 		Sys_Error("Hunk_Alloc overflow");
+	}
 
-	buf = membase + curhunksize;
+	buf = membase + sizeof(size_t) + curhunksize;
 	curhunksize += size;
-
 	return buf;
 }
 
-int Hunk_End(void)
+int
+Hunk_End(void)
 {
-	byte *n;
-
-	n = realloc(membase, curhunksize);
-
-	if (n != membase)
-		Sys_Error("Hunk_End:  Could not remap virtual block (%d)", errno);
-
+	*((size_t *)membase) = curhunksize + sizeof(size_t);
 	return curhunksize;
 }
 
-void Hunk_Free(void *base)
+void
+Hunk_Free(void *base)
 {
 	if (base)
-		free(base);
+	{
+		byte *m;
+		m = ((byte *)base) - sizeof(size_t);
+		free(m);
+	}
 }
