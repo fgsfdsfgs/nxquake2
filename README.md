@@ -20,9 +20,10 @@ LICENSE file for further information.
 
 You will need:
 * latest versions of devkitA64 and libnx;
-* switch-sdl2, switch-zlib, switch-mesa, switch-libdrm_nouveau.
+* switch-sdl2, switch-zlib, switch-mesa, switch-libdrm_nouveau;
+* [my fork of OpenAL-Soft](https://github.com/fgsfdsfgs/openal-soft).
 
-You can install the libraries with `(dkp-)pacman`.
+You can install most of the libraries with `(dkp-)pacman`.
 
 Run `make -f Makefile.nx` in this directory to build `nxquake2.nro`.
 
