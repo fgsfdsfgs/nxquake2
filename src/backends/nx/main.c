@@ -75,7 +75,12 @@ main(int argc, char **argv)
   threadClose(&actual_thread);
 	return 0;
 */
-  actual_main(NULL);
-  return 0;
+	actual_main(NULL);
+#ifdef __SWITCH__
+	// we drop out of the loop when the user presses HOME, so we gotta
+	// handle quit properly
+	Sys_Quit();
+#endif
+	return 0;
 }
 

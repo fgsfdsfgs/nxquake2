@@ -78,6 +78,7 @@ Sys_Error(char *error, ...)
 
 	if (SDL_WasInit(0)) SDL_Quit();
 	NET_Shutdown();
+	appletUnlockExit();
 	exit(1);
 }
 
@@ -100,12 +101,14 @@ Sys_Quit(void)
 
 	if (SDL_WasInit(0)) SDL_Quit();
 	NET_Shutdown();
+	appletUnlockExit();
 	exit(0);
 }
 
 void
 Sys_Init(void)
 {
+	appletLockExit();
 }
 
 /* ================================================================ */
