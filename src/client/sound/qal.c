@@ -322,12 +322,14 @@ QAL_Shutdown()
 	qalFilterf = NULL;
 	qalDeleteFilters = NULL;
 
+#ifndef STATIC_OPENAL
 	if (handle)
 	{
 		/* Unload the shared lib */
 		Sys_FreeLibrary(handle);
 		handle = NULL;
 	}
+#endif
 }
 
 /*
@@ -339,6 +341,7 @@ QAL_Init()
 {
 	al_device = Cvar_Get("al_device", "", CVAR_ARCHIVE);
 
+#ifndef STATIC_OPENAL
 	/* DEFAULT_OPENAL_DRIVER is defined at compile time via the compiler */
 	al_driver = Cvar_Get("al_driver", DEFAULT_OPENAL_DRIVER, CVAR_ARCHIVE);
 
@@ -354,6 +357,9 @@ QAL_Init()
 	}
 
 	#define ALSYMBOL(handle, sym) Sys_GetProcAddress(handle, #sym)
+#else
+	#define ALSYMBOL(handle, sym) alGetProcAddress(#sym)
+#endif
 
 	/* Connect function pointers to management functions */
 	qalcCreateContext = ALSYMBOL(handle, alcCreateContext);

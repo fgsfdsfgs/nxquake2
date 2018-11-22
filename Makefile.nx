@@ -55,6 +55,8 @@ SOURCES		:=	\
 	src/common/shared
 
 SOURCEFILES	:=	src/client/sound/sdl.c \
+	src/client/sound/openal.c \
+	src/client/sound/qal.c \
 	src/client/sound/ogg.c \
 	src/client/sound/sound.c \
 	src/client/sound/wave.c \
@@ -65,7 +67,7 @@ SOURCEFILES	:=	src/client/sound/sdl.c \
 DATA		:=	data
 INCLUDES	:=	
 DEFINES		+=	-DYQ2OSTYPE=\"NX\" -DYQ2ARCH=\"arm64\" -DOGG -DSDL2 \
-				-DBUILD_DATE=\"666\" -DUSE_FILE32API
+				-DBUILD_DATE=\"666\" -DUSE_FILE32API -DUSE_OPENAL -DSTATIC_OPENAL
 EXEFS_SRC	:=	exefs_src
 #ROMFS	:=	romfs
 
@@ -74,7 +76,7 @@ EXEFS_SRC	:=	exefs_src
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv8-a -mtune=cortex-a57 -mtp=soft -fPIE -mcpu=cortex-a57+crc+fp+simd
 
-CFLAGS	:=	-g -Wall -O3 -fno-strict-aliasing -fomit-frame-pointer -ffunction-sections \
+CFLAGS	:=	-g -O3 -fno-strict-aliasing -fomit-frame-pointer -ffunction-sections \
 			$(ARCH) $(DEFINES)
 
 CFLAGS	+=	$(INCLUDE) -D__SWITCH__
@@ -84,7 +86,7 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lSDL2main -lSDL2 -lz -lEGL -lglapi -ldrm_nouveau -lnx -lm -lstdc++
+LIBS	:= -lopenal-soft -lSDL2main -lSDL2 -lz -lEGL -lglapi -ldrm_nouveau -lnx -lm -lstdc++
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
