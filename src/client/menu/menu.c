@@ -2302,6 +2302,89 @@ M_Menu_Game_f(void)
 }
 
 /*
+ * CONFIRM DELETE MENU
+ */
+
+static void LoadGame_MenuInit(void);
+
+static menuframework_s s_confirmdeletesavegame_menu;
+static menuseparator_s s_deletesavegame_label;
+static menuaction_s s_confirmdeletesavegame_action;
+static menuaction_s s_canceldeletesavegame_action;
+
+void (*ParentInitFunc)(void);
+
+static void
+DeleteSaveGameCallback(void *self)
+{
+	char name[MAX_OSPATH];
+	menuaction_s *item = (menuaction_s *)self;
+
+	Com_sprintf(name, sizeof(name), "%s/save/save%d/", FS_Gamedir(), item->generic.localdata[0]);
+	Sys_RemoveDir(name);
+
+	ParentInitFunc();
+	M_PopMenu();
+}
+
+static void
+CancelDeleteSaveGameCallback(void *unused)
+{
+	M_PopMenu();
+}
+
+static const char *
+DeleteSaveGame_MenuKey(int key)
+{
+    return Default_MenuKey(&s_confirmdeletesavegame_menu, key);
+}
+
+static void
+DeleteSaveGame_MenuDraw(void)
+{
+    Menu_AdjustCursor(&s_confirmdeletesavegame_menu, 1);
+    Menu_Draw(&s_confirmdeletesavegame_menu);
+}
+
+static void
+ConfirmDeleteSaveGame_MenuInit(int i, void (*callback)(void))
+{
+	float scale = SCR_GetMenuScale();
+
+	ParentInitFunc = callback;
+
+	// 32 = strlen("Are you sure...")
+	s_confirmdeletesavegame_menu.x = viddef.width / 2 - (8 * 32 * scale / 2);
+	s_confirmdeletesavegame_menu.y = viddef.height / (2 * scale) - 58;
+	s_confirmdeletesavegame_menu.nitems = 0;
+
+	s_deletesavegame_label.generic.type = MTYPE_SEPARATOR;
+	s_deletesavegame_label.generic.name = "Are you sure you want to delete?";
+	s_deletesavegame_label.generic.x = 8 * scale * 32;
+	s_deletesavegame_label.generic.y = 0;
+	s_deletesavegame_label.generic.flags = QMF_LEFT_JUSTIFY;
+	Menu_AddItem(&s_confirmdeletesavegame_menu, &s_deletesavegame_label);
+
+	s_confirmdeletesavegame_action.generic.type = MTYPE_ACTION;
+	s_confirmdeletesavegame_action.generic.name = "yes";
+	s_confirmdeletesavegame_action.generic.x = scale * 32;
+	s_confirmdeletesavegame_action.generic.y = 20;
+	s_confirmdeletesavegame_action.generic.localdata[0] = i;
+	s_confirmdeletesavegame_action.generic.flags = QMF_LEFT_JUSTIFY;
+	s_confirmdeletesavegame_action.generic.callback = DeleteSaveGameCallback;
+	Menu_AddItem(&s_confirmdeletesavegame_menu, &s_confirmdeletesavegame_action);
+
+	s_canceldeletesavegame_action.generic.type = MTYPE_ACTION;
+	s_canceldeletesavegame_action.generic.name = "no";
+	s_canceldeletesavegame_action.generic.x = scale * 32;
+	s_canceldeletesavegame_action.generic.y = 30;
+	s_canceldeletesavegame_action.generic.flags = QMF_LEFT_JUSTIFY;
+	s_canceldeletesavegame_action.generic.callback = CancelDeleteSaveGameCallback;
+	Menu_AddItem(&s_confirmdeletesavegame_menu, &s_canceldeletesavegame_action);
+}
+
+
+/*
  * LOADGAME MENU
  */
 
@@ -2439,6 +2522,7 @@ LoadGame_MenuKey(int key)
 {
     static menuframework_s *m = &s_loadgame_menu;
     int menu_key = Key_GetMenuKey(key);
+    menucommon_s *item;
 
     switch (menu_key)
     {
@@ -2467,6 +2551,20 @@ LoadGame_MenuKey(int key)
         LoadSave_AdjustPage(1);
         LoadGame_MenuInit();
         return menu_move_sound;
+
+    case K_BACKSPACE:
+    case K_DEL:
+    case K_KP_DEL:
+		if ((item = Menu_ItemAtCursor(m)) != NULL)
+		{
+			if (item->type == MTYPE_ACTION)
+			{
+				ConfirmDeleteSaveGame_MenuInit(item->localdata[0], LoadGame_MenuInit);
+				M_PushMenu(DeleteSaveGame_MenuDraw, DeleteSaveGame_MenuKey);
+			}
+		}
+
+		return menu_move_sound;
 
     default:
         s_savegame_menu.cursor = s_loadgame_menu.cursor;
@@ -2550,6 +2648,7 @@ SaveGame_MenuKey(int key)
 {
     static menuframework_s *m = &s_savegame_menu;
     int menu_key = Key_GetMenuKey(key);
+    menucommon_s *item;
 
     if (m_popup_string)
     {
@@ -2585,6 +2684,19 @@ SaveGame_MenuKey(int key)
         SaveGame_MenuInit();
         return menu_move_sound;
 
+    case K_BACKSPACE:
+    case K_DEL:
+    case K_KP_DEL:
+		if ((item = Menu_ItemAtCursor(m)) != NULL)
+		{
+			if (item->type == MTYPE_ACTION)
+			{
+				ConfirmDeleteSaveGame_MenuInit(item->localdata[0], SaveGame_MenuInit);
+				M_PushMenu(DeleteSaveGame_MenuDraw, DeleteSaveGame_MenuKey);
+			}
+		}
+
+		return menu_move_sound;
     default:
         s_loadgame_menu.cursor = s_savegame_menu.cursor;
         break;
@@ -2989,7 +3101,7 @@ StartServer_MenuInit(void)
 
         while (i < length)
         {
-            if (s[i] == '\r')
+            if (s[i] == '\n')
             {
                 nummaps++;
             }
@@ -3684,6 +3796,11 @@ static menuframework_s s_downloadoptions_menu;
 
 static menuseparator_s s_download_title;
 static menulist_s s_allow_download_box;
+
+#ifdef USE_CURL
+static menulist_s s_allow_download_http_box;
+#endif
+
 static menulist_s s_allow_download_maps_box;
 static menulist_s s_allow_download_models_box;
 static menulist_s s_allow_download_players_box;
@@ -3698,6 +3815,12 @@ DownloadCallback(void *self)
     {
         Cvar_SetValue("allow_download", (float)f->curvalue);
     }
+#ifdef USE_CURL
+	else if (f == &s_allow_download_http_box)
+	{
+		Cvar_SetValue("cl_http_downloads", f->curvalue);
+	}
+#endif
     else if (f == &s_allow_download_maps_box)
     {
         Cvar_SetValue("allow_download_maps", (float)f->curvalue);
@@ -3742,9 +3865,21 @@ DownloadOptions_MenuInit(void)
     s_allow_download_box.itemnames = yes_no_names;
     s_allow_download_box.curvalue = (Cvar_VariableValue("allow_download") != 0);
 
+#ifdef USE_CURL
+	s_allow_download_http_box.generic.type = MTYPE_SPINCONTROL;
+	s_allow_download_http_box.generic.x	= 0;
+	s_allow_download_http_box.generic.y	= y += 20;
+	s_allow_download_http_box.generic.name	= "http downloading";
+	s_allow_download_http_box.generic.callback = DownloadCallback;
+	s_allow_download_http_box.itemnames = yes_no_names;
+	s_allow_download_http_box.curvalue = (Cvar_VariableValue("cl_http_downloads") != 0);
+#else
+	y += 10;
+#endif
+
     s_allow_download_maps_box.generic.type = MTYPE_SPINCONTROL;
     s_allow_download_maps_box.generic.x = 0;
-    s_allow_download_maps_box.generic.y = y += 20;
+    s_allow_download_maps_box.generic.y = y += 10;
     s_allow_download_maps_box.generic.name = "maps";
     s_allow_download_maps_box.generic.callback = DownloadCallback;
     s_allow_download_maps_box.itemnames = yes_no_names;
@@ -3780,6 +3915,11 @@ DownloadOptions_MenuInit(void)
 
     Menu_AddItem(&s_downloadoptions_menu, &s_download_title);
     Menu_AddItem(&s_downloadoptions_menu, &s_allow_download_box);
+
+#ifdef USE_CURL
+	Menu_AddItem(&s_downloadoptions_menu, &s_allow_download_http_box);
+#endif
+
     Menu_AddItem(&s_downloadoptions_menu, &s_allow_download_maps_box);
     Menu_AddItem(&s_downloadoptions_menu, &s_allow_download_players_box);
     Menu_AddItem(&s_downloadoptions_menu, &s_allow_download_models_box);
