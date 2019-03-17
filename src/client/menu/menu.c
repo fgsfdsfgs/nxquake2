@@ -1193,24 +1193,27 @@ ControlsResetDefaultsFunc(void *unused)
 
     // Ch0wW : Also properly reset the bindings for the Switch system.
     #ifdef __SWITCH__
-    Cbuf_AddText("bind TRIG_RIGHT +attack\n");  // Attack
+    //Movement
     Cbuf_AddText("bind TRIG_LEFT +moveup\n");   // Jump
-    Cbuf_AddText("bind JOY2 +moveup\n");   // Jump
+    Cbuf_AddText("bind JOY2 +moveup\n");        // Jump
     Cbuf_AddText("bind JOY1 +movedown\n");      // Crouch
     Cbuf_AddText("bind JOY5 +movedown\n");      // Crouch
     Cbuf_AddText("bind JOY7 +movedown\n");      // Crouch
-    Cbuf_AddText("bind JOY8 invuse\n");      // Use inventory
-    Cbuf_AddText("bind JOY3 weapnext\n");      // Next Weapon
-    Cbuf_AddText("bind JOY4 weapprev\n");      // Prev. Weapon
+
+    // Attack
+    Cbuf_AddText("bind TRIG_RIGHT +attack\n");
+    Cbuf_AddText("bind JOY3 weapnext\n");
+    Cbuf_AddText("bind JOY4 weapprev\n");
 
     // Inventory actions
-    Cbuf_AddText("bind JOY14 inven\n");      // Display Inventory
-    Cbuf_AddText("bind JOY13 invprev\n");      // Display Inventory
-    Cbuf_AddText("bind JOY15 invnext\n");      // Display Inventory
-    Cbuf_AddText("bind JOY16 invdrop\n");      // Drop current item in the inventory
+    Cbuf_AddText("bind JOY14 inven\n");
+    Cbuf_AddText("bind JOY13 invprev\n");
+    Cbuf_AddText("bind JOY15 invnext\n");
+    Cbuf_AddText("bind JOY16 invdrop\n");
+    Cbuf_AddText("bind JOY8 invuse\n");
     
     // Other
-    Cbuf_AddText("bind JOY11 \"cmd help\"\n");      // Display Inventory
+    Cbuf_AddText("bind JOY11 \"cmd help\"\n");
     #endif
 
     Cbuf_Execute();
