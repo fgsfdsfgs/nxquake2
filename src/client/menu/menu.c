@@ -255,6 +255,7 @@ Key_GetMenuKey(int key)
 			return K_ENTER;
 		case K_ESCAPE:
 		case K_JOY_BACK:
+        case K_JOY2:                // Ch0wW : adding B button for BACK.
 			return K_ESCAPE;
 	}
 	return key;
@@ -4390,6 +4391,7 @@ M_Quit_Key(int key)
     int menu_key = Key_GetMenuKey(key);
     switch (menu_key)
     {
+    case K_JOY1:
     case K_ESCAPE:
     case 'n':
     case 'N':
