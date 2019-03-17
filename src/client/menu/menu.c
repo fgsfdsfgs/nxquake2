@@ -34,6 +34,9 @@
 #include "../sound/header/local.h"
 #include "header/qmenu.h"
 
+extern cvar_t *joy_yawsensitivity;
+extern cvar_t *joy_pitchsensitivity;
+
 static int m_main_cursor;
 
 /* Number of the frames of the spinning quake logo */
@@ -1102,7 +1105,12 @@ M_Menu_Keys_f(void)
 static menuframework_s s_options_menu;
 static menuaction_s s_options_defaults_action;
 static menuaction_s s_options_customize_options_action;
+#ifdef __SWITCH__
+static menuslider_s s_options_x_sensitivity_slider;
+static menuslider_s s_options_y_sensitivity_slider;
+#else
 static menuslider_s s_options_sensitivity_slider;
+#endif
 static menulist_s s_options_freelook_box;
 static menulist_s s_options_alwaysrun_box;
 static menulist_s s_options_invertmouse_box;
@@ -1146,11 +1154,23 @@ FreeLookFunc(void *unused)
     Cvar_SetValue("freelook", (float)s_options_freelook_box.curvalue);
 }
 
+#ifdef __SWITCH__
+static void JoyXSpeedFunc(void *unused)
+{
+    Cvar_SetValue("joy_yawsensitivity", s_options_x_sensitivity_slider.curvalue);
+}
+
+static void JoyYSpeedFunc(void *unused)
+{
+    Cvar_SetValue("joy_pitchsensitivity", s_options_y_sensitivity_slider.curvalue);
+}
+#else
 static void
 MouseSpeedFunc(void *unused)
 {
     Cvar_SetValue("sensitivity", s_options_sensitivity_slider.curvalue / 2.0F);
 }
+#endif
 
 static float
 ClampCvar(float min, float max, float value)
@@ -1176,7 +1196,15 @@ ControlsSetMenuItemValues(void)
     s_options_oggvolume_slider.curvalue = Cvar_VariableValue("ogg_volume") * 10;
     s_options_oggenable_box.curvalue = (Cvar_VariableValue("ogg_enable") != 0);
     s_options_quality_list.curvalue = (Cvar_VariableValue("s_loadas8bit") == 0);
+    
+#ifdef __SWITCH__
+s_options_x_sensitivity_slider.curvalue =  joy_yawsensitivity->value;
+s_options_y_sensitivity_slider.curvalue = joy_pitchsensitivity->value;
+#else
     s_options_sensitivity_slider.curvalue = sensitivity->value * 2;
+#endif
+
+
     s_options_alwaysrun_box.curvalue = (cl_run->value != 0);
     s_options_invertmouse_box.curvalue = (m_pitch->value < 0);
     s_options_lookstrafe_box.curvalue = (lookstrafe->value != 0);
@@ -1214,6 +1242,10 @@ ControlsResetDefaultsFunc(void *unused)
     
     // Other
     Cbuf_AddText("bind JOY11 \"cmd help\"\n");
+    Cbuf_AddText("joy_yawsensitivity 4.0\n");
+    Cbuf_AddText("joy_pitchsensitivity 4.0\n");
+
+
     #endif
 
     Cbuf_Execute();
@@ -1343,6 +1375,13 @@ UpdateSoundQualityFunc(void *unused)
 static void
 Options_MenuInit(void)
 {
+
+#ifdef __SWITCH__
+    int y = 10;
+#else
+    int y = 0;
+#endif
+
     static const char *ogg_music_items[] =
     {
         "disabled",
@@ -1423,6 +1462,25 @@ Options_MenuInit(void)
     s_options_quality_list.generic.callback = UpdateSoundQualityFunc;
     s_options_quality_list.itemnames = quality_items;
 
+#ifdef __SWITCH__
+    s_options_x_sensitivity_slider.generic.type = MTYPE_SLIDER;
+    s_options_x_sensitivity_slider.generic.x = 0;
+    s_options_x_sensitivity_slider.generic.y = 60;
+    s_options_x_sensitivity_slider.generic.name = "JoyX Sensitivity";
+    s_options_x_sensitivity_slider.generic.callback = JoyXSpeedFunc;
+    s_options_x_sensitivity_slider.minvalue = 1;
+    s_options_x_sensitivity_slider.maxvalue = 20;
+
+    s_options_y_sensitivity_slider.generic.type = MTYPE_SLIDER;
+    s_options_y_sensitivity_slider.generic.x = 0;
+    s_options_y_sensitivity_slider.generic.y = 70;
+    s_options_y_sensitivity_slider.generic.name = "JoyY Sensitivity";
+    s_options_y_sensitivity_slider.generic.callback = JoyYSpeedFunc;
+    s_options_y_sensitivity_slider.minvalue = 1;
+    s_options_y_sensitivity_slider.maxvalue = 20;
+
+
+#else
     s_options_sensitivity_slider.generic.type = MTYPE_SLIDER;
     s_options_sensitivity_slider.generic.x = 0;
     s_options_sensitivity_slider.generic.y = 60;
@@ -1430,45 +1488,46 @@ Options_MenuInit(void)
     s_options_sensitivity_slider.generic.callback = MouseSpeedFunc;
     s_options_sensitivity_slider.minvalue = 2;
     s_options_sensitivity_slider.maxvalue = 22;
+#endif
 
     s_options_alwaysrun_box.generic.type = MTYPE_SPINCONTROL;
     s_options_alwaysrun_box.generic.x = 0;
-    s_options_alwaysrun_box.generic.y = 70;
+    s_options_alwaysrun_box.generic.y = y+70;
     s_options_alwaysrun_box.generic.name = "always run";
     s_options_alwaysrun_box.generic.callback = AlwaysRunFunc;
     s_options_alwaysrun_box.itemnames = yesno_names;
 
     s_options_invertmouse_box.generic.type = MTYPE_SPINCONTROL;
     s_options_invertmouse_box.generic.x = 0;
-    s_options_invertmouse_box.generic.y = 80;
+    s_options_invertmouse_box.generic.y = y+80;
     s_options_invertmouse_box.generic.name = "invert mouse";
     s_options_invertmouse_box.generic.callback = InvertMouseFunc;
     s_options_invertmouse_box.itemnames = yesno_names;
 
     s_options_lookstrafe_box.generic.type = MTYPE_SPINCONTROL;
     s_options_lookstrafe_box.generic.x = 0;
-    s_options_lookstrafe_box.generic.y = 90;
+    s_options_lookstrafe_box.generic.y = y+90;
     s_options_lookstrafe_box.generic.name = "lookstrafe";
     s_options_lookstrafe_box.generic.callback = LookstrafeFunc;
     s_options_lookstrafe_box.itemnames = yesno_names;
 
     s_options_freelook_box.generic.type = MTYPE_SPINCONTROL;
     s_options_freelook_box.generic.x = 0;
-    s_options_freelook_box.generic.y = 100;
+    s_options_freelook_box.generic.y = y+100;
     s_options_freelook_box.generic.name = "free look";
     s_options_freelook_box.generic.callback = FreeLookFunc;
     s_options_freelook_box.itemnames = yesno_names;
 
     s_options_crosshair_box.generic.type = MTYPE_SPINCONTROL;
     s_options_crosshair_box.generic.x = 0;
-    s_options_crosshair_box.generic.y = 110;
+    s_options_crosshair_box.generic.y = y+110;
     s_options_crosshair_box.generic.name = "crosshair";
     s_options_crosshair_box.generic.callback = CrosshairFunc;
     s_options_crosshair_box.itemnames = crosshair_names;
 
     s_options_haptic_slider.generic.type = MTYPE_SLIDER;
     s_options_haptic_slider.generic.x = 0;
-    s_options_haptic_slider.generic.y = 120;
+    s_options_haptic_slider.generic.y = y+120;
     s_options_haptic_slider.generic.name = "haptic magnitude";
     s_options_haptic_slider.generic.callback = HapticMagnitudeFunc;
     s_options_haptic_slider.minvalue = 0;
@@ -1476,19 +1535,19 @@ Options_MenuInit(void)
 
     s_options_customize_options_action.generic.type = MTYPE_ACTION;
     s_options_customize_options_action.generic.x = 0;
-    s_options_customize_options_action.generic.y = 140;
+    s_options_customize_options_action.generic.y = y+140;
     s_options_customize_options_action.generic.name = "customize controls";
     s_options_customize_options_action.generic.callback = CustomizeControlsFunc;
 
     s_options_defaults_action.generic.type = MTYPE_ACTION;
     s_options_defaults_action.generic.x = 0;
-    s_options_defaults_action.generic.y = 150;
+    s_options_defaults_action.generic.y = y+150;
     s_options_defaults_action.generic.name = "reset defaults";
     s_options_defaults_action.generic.callback = ControlsResetDefaultsFunc;
 
     s_options_console_action.generic.type = MTYPE_ACTION;
     s_options_console_action.generic.x = 0;
-    s_options_console_action.generic.y = 160;
+    s_options_console_action.generic.y = y+160;
     s_options_console_action.generic.name = "go to console";
     s_options_console_action.generic.callback = ConsoleFunc;
 
@@ -1500,7 +1559,14 @@ Options_MenuInit(void)
     Menu_AddItem(&s_options_menu, (void *)&s_options_oggenable_box);
     Menu_AddItem(&s_options_menu, (void *)&s_options_oggshuffle_box);
     Menu_AddItem(&s_options_menu, (void *)&s_options_quality_list);
+
+#ifdef __SWITCH__
+    Menu_AddItem(&s_options_menu, (void *)&s_options_x_sensitivity_slider);
+    Menu_AddItem(&s_options_menu, (void *)&s_options_y_sensitivity_slider);
+#else
     Menu_AddItem(&s_options_menu, (void *)&s_options_sensitivity_slider);
+#endif
+
     Menu_AddItem(&s_options_menu, (void *)&s_options_alwaysrun_box);
     Menu_AddItem(&s_options_menu, (void *)&s_options_invertmouse_box);
     Menu_AddItem(&s_options_menu, (void *)&s_options_lookstrafe_box);
