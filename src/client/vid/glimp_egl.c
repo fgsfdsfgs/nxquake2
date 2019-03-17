@@ -69,7 +69,7 @@ setMesaConfig()
 }
 
 static qboolean
-InitEGL(void)
+InitEGL(NWindow* win)
 {
 	// Connect to the EGL default display
 	s_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
@@ -107,7 +107,7 @@ InitEGL(void)
 	}
 
 	// Create an EGL window surface
-	s_surface = eglCreateWindowSurface(s_display, config, (char*)"", NULL);
+	s_surface = eglCreateWindowSurface(s_display, config, win, NULL);
 	if (!s_surface)
 	{
 		Com_Error(ERR_FATAL, "Surface creation failed! error: %d", eglGetError());
@@ -185,7 +185,8 @@ GLimp_Init(void)
 	vid_displayrefreshrate = Cvar_Get("vid_displayrefreshrate", "-1", CVAR_ARCHIVE);
 
 	// init 1920x1080 framebuffer to allow 1080p graphics when docked
-	gfxInitResolution (1920, 1080);
+	NWindow* win = nwindowGetDefault();
+    nwindowSetDimensions(win, 1920, 1080);
 
 	fb_big = (appletGetOperationMode() == AppletOperationMode_Docked);
 
@@ -199,7 +200,7 @@ GLimp_Init(void)
 	if (!sdl_renderer) printf("sdl_renderer == NULL!\n%s\n", SDL_GetError());
 
 	setMesaConfig();
-	InitEGL();
+	InitEGL(win);
 	printf("gladLoadGL(): %d\n", gladLoadGL());
 
 	return true;
@@ -246,7 +247,8 @@ GLimp_InitGraphics(int fullscreen, int *pwidth, int *pheight)
 	viddef.width = width;
 	viddef.height = height;
 
-	gfxConfigureResolution (width, height);
+	NWindow* win = nwindowGetDefault();
+	nwindowSetCrop(win, 0, 0, width, height);
 
 	if (initSuccessful) return true;
 
