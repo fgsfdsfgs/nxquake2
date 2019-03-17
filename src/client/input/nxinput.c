@@ -166,8 +166,8 @@ static cvar_t *windowed_mouse;
 
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 /* Joystick sensitivity */
-static cvar_t *joy_yawsensitivity;
-static cvar_t *joy_pitchsensitivity;
+cvar_t *joy_yawsensitivity;
+cvar_t *joy_pitchsensitivity;
 static cvar_t *joy_forwardsensitivity;
 static cvar_t *joy_sidesensitivity;
 static cvar_t *joy_upsensitivity;
@@ -637,12 +637,12 @@ IN_Update(void)
 					}
 					else if (strcmp(direction_type, "yaw") == 0)
 					{
-						joystick_yaw = axis_value * joy_yawsensitivity->value;
+						joystick_yaw = axis_value * joy_yawsensitivity->value * 0.25f;
 						joystick_yaw *= cl_yawspeed->value;
 					}
 					else if (strcmp(direction_type, "pitch") == 0)
 					{
-						joystick_pitch = axis_value * joy_pitchsensitivity->value;
+						joystick_pitch = axis_value * joy_pitchsensitivity->value * 0.25f;
 						joystick_pitch *= cl_pitchspeed->value;
 					}
 					else if (strcmp(direction_type, "updown") == 0)
@@ -1265,8 +1265,8 @@ IN_Init(void)
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 	joy_haptic_magnitude = Cvar_Get("joy_haptic_magnitude", "0.0", CVAR_ARCHIVE);
 
-	joy_yawsensitivity = Cvar_Get("joy_yawsensitivity", "1.0", CVAR_ARCHIVE);
-	joy_pitchsensitivity = Cvar_Get("joy_pitchsensitivity", "1.0", CVAR_ARCHIVE);
+	joy_yawsensitivity = Cvar_Get("joy_yawsensitivity", "4.0", CVAR_ARCHIVE);
+	joy_pitchsensitivity = Cvar_Get("joy_pitchsensitivity", "4.0", CVAR_ARCHIVE);
 	joy_forwardsensitivity = Cvar_Get("joy_forwardsensitivity", "1.0", CVAR_ARCHIVE);
 	joy_sidesensitivity = Cvar_Get("joy_sidesensitivity", "1.0", CVAR_ARCHIVE);
 	joy_upsensitivity = Cvar_Get("joy_upsensitivity", "1.0", CVAR_ARCHIVE);

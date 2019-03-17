@@ -3,3 +3,8 @@
 *.mk
 *.user
 *.d
+*.elf
+*.nacp
+*.nro
+*.nso
+*.pfs0
