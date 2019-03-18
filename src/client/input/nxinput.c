@@ -1466,28 +1466,6 @@ static void deinitNxLink()
 // ============================================================================
 
 #ifdef __SWITCH__
-extern void userAppInit()
-{
-	// heyjoeway: Allows loading in the background
-	// This is eventually turned off by D_SRB2Loop
-	appletSetFocusHandlingMode(AppletFocusHandlingMode_NoSuspend);
-
-	#ifdef ENABLE_NXLINK
-	initNxLink();
-	#else
-	socketInitializeDefault(); // nxlink does this, needed for online support
-	#endif
-}
-
-extern void userAppExit()
-{
-	#ifdef ENABLE_NXLINK
-    deinitNxLink();
-	#else
-	socketExit(); // nxlink does this, needed for online support
-	#endif
-}
-
 void
 IN_SwitchKeyboard(char *out, int out_len)
 {
