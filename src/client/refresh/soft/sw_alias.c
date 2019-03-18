@@ -496,8 +496,8 @@ R_AliasSetupSkin(const entity_t *currententity, const model_t *currentmodel)
 		skinnum = currententity->skinnum;
 		if ((skinnum >= s_pmdl->num_skins) || (skinnum < 0))
 		{
-			R_Printf(PRINT_ALL, "R_AliasSetupSkin %s: no such skin # %d\n",
-				currentmodel->name, skinnum);
+			R_Printf(PRINT_ALL, "%s %s: no such skin # %d\n",
+				__func__, currentmodel->name, skinnum);
 			skinnum = 0;
 		}
 
@@ -624,14 +624,14 @@ R_AliasSetupFrames(const entity_t *currententity, const model_t *currentmodel, d
 
 	if ( ( thisframe >= pmdl->num_frames ) || ( thisframe < 0 ) )
 	{
-		R_Printf(PRINT_ALL, "R_AliasSetupFrames %s: no such thisframe %d\n",
-			currentmodel->name, thisframe);
+		R_Printf(PRINT_ALL, "%s %s: no such thisframe %d\n",
+			__func__, currentmodel->name, thisframe);
 		thisframe = 0;
 	}
 	if ( ( lastframe >= pmdl->num_frames ) || ( lastframe < 0 ) )
 	{
-		R_Printf(PRINT_ALL, "R_AliasSetupFrames %s: no such lastframe %d\n",
-			currentmodel->name, lastframe);
+		R_Printf(PRINT_ALL, "%s %s: no such lastframe %d\n",
+			__func__, currentmodel->name, lastframe);
 		lastframe = 0;
 	}
 
@@ -719,8 +719,8 @@ R_AliasDrawModel(entity_t *currententity, const model_t *currentmodel)
 			return;
 		}
 
-		float fov = 2.0*tan(r_gunfov->value*((4.0/3.0)*M_PI/360.0));
-		aliasxscale = ((float)r_refdef.vrect.width / fov) * r_aliasuvscale;
+		float gunfov = 2 * tan((float)r_gunfov->value / 360 * M_PI);
+		aliasxscale = ((float)r_refdef.vrect.width / gunfov) * r_aliasuvscale;
 		aliasyscale = aliasxscale;
 
 		if ( r_lefthand->value == 1.0F )

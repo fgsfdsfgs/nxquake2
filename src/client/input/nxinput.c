@@ -89,6 +89,15 @@ SDL 1.2 remove this statement!"
 #define MOUSE_MAX 3000
 #define MOUSE_MIN 40
 
+#include <switch.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/errno.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+
 /* Globals */
 static int mouse_x, mouse_y;
 static int old_mouse_x, old_mouse_y;
@@ -1427,17 +1436,6 @@ IN_Shutdown(void)
 
 /* ------------------------------------------------------------------ */
 
-#ifdef __SWITCH__
-#include <switch.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/errno.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#endif
-
 #ifdef ENABLE_NXLINK
 #define TRACE(fmt,...) ((void)0)
 static int s_nxlinkSock = -1;
@@ -1488,5 +1486,23 @@ extern void userAppExit()
 	#else
 	socketExit(); // nxlink does this, needed for online support
 	#endif
+}
+
+void
+IN_SwitchKeyboard(char *out, int out_len)
+{
+	SwkbdConfig kbd;
+	char tmp_out[out_len + 1];
+	Result rc;
+	tmp_out[0] = 0;
+	rc = swkbdCreate(&kbd, 0);
+	if (R_SUCCEEDED(rc)) {
+		swkbdConfigMakePresetDefault(&kbd);
+		swkbdConfigSetInitialText(&kbd, out);
+		rc = swkbdShow(&kbd, tmp_out, out_len);
+		if (R_SUCCEEDED(rc))
+			strncpy(out, tmp_out, out_len); 
+		swkbdClose(&kbd);
+	}
 }
 #endif
