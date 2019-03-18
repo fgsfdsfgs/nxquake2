@@ -289,7 +289,7 @@ Key_Console(int key)
 		}
 	}
 
-	char text[64], fulltext[65];
+	char oldtext[64], text[64], fulltext[65];
 
 	if (key == K_JOY3) {
 		
@@ -298,10 +298,16 @@ Key_Console(int key)
 		{
 			strcpy(text, key_lines[edit_line]);
 			memmove(text, text+1, strlen(text));
+			strcpy(oldtext, text);								// Check line
 		}
 
 		// Initiate the console
 		IN_SwitchKeyboard(text, 64);
+
+		// No action if no text or same as earlier
+		if (!strlen(text) || !strcmp(oldtext, text))
+			return;
+
 		sprintf(fulltext, "]%s", text);
 		Cbuf_AddText(text);
 		Cbuf_AddText("\n");

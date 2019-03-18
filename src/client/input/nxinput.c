@@ -1436,7 +1436,6 @@ IN_Shutdown(void)
 
 /* ------------------------------------------------------------------ */
 
-#ifdef __SWITCH__
 void
 IN_SwitchKeyboard(char *out, int out_len)
 {
@@ -1454,4 +1453,3 @@ IN_SwitchKeyboard(char *out, int out_len)
 		swkbdClose(&kbd);
 	}
 }
-#endif
