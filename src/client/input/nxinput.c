@@ -191,6 +191,8 @@ static cvar_t *joy_haptic_magnitude;
 
 extern void GLimp_GrabInput(qboolean grab);
 
+extern kbutton_t in_fastturn;
+
 /* ------------------------------------------------------------------ */
 
 /*
@@ -637,12 +639,13 @@ IN_Update(void)
 					}
 					else if (strcmp(direction_type, "yaw") == 0)
 					{
-						joystick_yaw = axis_value * joy_yawsensitivity->value * 0.25f;
+						joystick_yaw = axis_value * joy_yawsensitivity->value * ( CL_KeyState(&in_fastturn) ? 0.20f : 0.10f);
 						joystick_yaw *= cl_yawspeed->value;
+
 					}
 					else if (strcmp(direction_type, "pitch") == 0)
 					{
-						joystick_pitch = axis_value * joy_pitchsensitivity->value * 0.25f;
+						joystick_pitch = axis_value * joy_pitchsensitivity->value * ( CL_KeyState(&in_fastturn) ? 0.20f : 0.10f);
 						joystick_pitch *= cl_pitchspeed->value;
 					}
 					else if (strcmp(direction_type, "updown") == 0)
@@ -1424,3 +1427,66 @@ IN_Shutdown(void)
 
 /* ------------------------------------------------------------------ */
 
+#ifdef __SWITCH__
+#include <switch.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/errno.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#endif
+
+#ifdef ENABLE_NXLINK
+#define TRACE(fmt,...) ((void)0)
+static int s_nxlinkSock = -1;
+
+static void initNxLink()
+{
+    if (R_FAILED(socketInitializeDefault()))
+        return;
+
+    s_nxlinkSock = nxlinkStdio();
+    if (s_nxlinkSock >= 0)
+        TRACE("printf output now goes to nxlink server");
+    else
+        socketExit();
+}
+
+static void deinitNxLink()
+{
+    if (s_nxlinkSock >= 0)
+    {
+        close(s_nxlinkSock);
+        socketExit();
+        s_nxlinkSock = -1;
+    }
+}
+#endif
+
+// ============================================================================
+
+#ifdef __SWITCH__
+extern void userAppInit()
+{
+	// heyjoeway: Allows loading in the background
+	// This is eventually turned off by D_SRB2Loop
+	appletSetFocusHandlingMode(AppletFocusHandlingMode_NoSuspend);
+
+	#ifdef ENABLE_NXLINK
+	initNxLink();
+	#else
+	socketInitializeDefault(); // nxlink does this, needed for online support
+	#endif
+}
+
+extern void userAppExit()
+{
+	#ifdef ENABLE_NXLINK
+    deinitNxLink();
+	#else
+	socketExit(); // nxlink does this, needed for online support
+	#endif
+}
+#endif
