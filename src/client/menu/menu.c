@@ -258,7 +258,7 @@ Key_GetMenuKey(int key)
 			return K_ENTER;
 		case K_ESCAPE:
 		case K_JOY_BACK:
-        case K_JOY2:                // Ch0wW : adding B button for BACK.
+		case K_JOY2:                // Ch0wW : adding B button for BACK.
 			return K_ESCAPE;
 	}
 	return key;
@@ -4000,7 +4000,7 @@ AddressBook_MenuInit(void)
 const char *
 AddressBook_MenuKey(int key)
 {
-    if (key == K_ESCAPE)
+    if (key == K_ESCAPE || key == K_JOY2)
     {
         int index;
         char buffer[20];
@@ -4563,7 +4563,7 @@ PlayerConfig_MenuDraw(void)
 static const char *
 PlayerConfig_MenuKey(int key)
 {
-    if (key == K_ESCAPE)
+    if (key == K_ESCAPE || key == K_JOY2)
     {
         char scratch[1024];
         int i;

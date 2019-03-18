@@ -99,6 +99,13 @@ Action_Draw(menuaction_s *a)
 qboolean
 Field_DoEnter(menufield_s *f)
 {
+#ifdef __SWITCH__
+	IN_SwitchKeyboard(f->buffer, 80);
+	f->cursor = strlen(f->buffer);
+	if (f->cursor > f->visible_length)
+		f->visible_offset = f->cursor - f->visible_length;
+	return true;
+#endif
 	if (f->generic.callback)
 	{
 		f->generic.callback(f);
