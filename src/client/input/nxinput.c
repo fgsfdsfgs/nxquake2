@@ -1436,35 +1436,6 @@ IN_Shutdown(void)
 
 /* ------------------------------------------------------------------ */
 
-#ifdef ENABLE_NXLINK
-#define TRACE(fmt,...) ((void)0)
-static int s_nxlinkSock = -1;
-
-static void initNxLink()
-{
-    if (R_FAILED(socketInitializeDefault()))
-        return;
-
-    s_nxlinkSock = nxlinkStdio();
-    if (s_nxlinkSock >= 0)
-        TRACE("printf output now goes to nxlink server");
-    else
-        socketExit();
-}
-
-static void deinitNxLink()
-{
-    if (s_nxlinkSock >= 0)
-    {
-        close(s_nxlinkSock);
-        socketExit();
-        s_nxlinkSock = -1;
-    }
-}
-#endif
-
-// ============================================================================
-
 #ifdef __SWITCH__
 void
 IN_SwitchKeyboard(char *out, int out_len)
