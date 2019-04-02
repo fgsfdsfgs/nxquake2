@@ -89,15 +89,6 @@ SDL 1.2 remove this statement!"
 #define MOUSE_MAX 3000
 #define MOUSE_MIN 40
 
-#include <switch.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/errno.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-
 /* Globals */
 static int mouse_x, mouse_y;
 static int old_mouse_x, old_mouse_y;
@@ -200,7 +191,7 @@ static cvar_t *joy_haptic_magnitude;
 
 extern void GLimp_GrabInput(qboolean grab);
 
-extern kbutton_t in_fastturn;
+extern kbutton_t in_speed;
 
 /* ------------------------------------------------------------------ */
 
@@ -634,6 +625,7 @@ IN_Update(void)
 
 				if (cls.key_dest == key_game && (int) cl_paused->value == 0)
 				{
+					float modifier = (in_speed.state & 1) ? 0.5f : 0.25f;
 					if (strcmp(direction_type, "sidemove") == 0)
 					{
 						joystick_sidemove = axis_value * joy_sidesensitivity->value;
@@ -648,13 +640,13 @@ IN_Update(void)
 					}
 					else if (strcmp(direction_type, "yaw") == 0)
 					{
-						joystick_yaw = axis_value * joy_yawsensitivity->value * ( CL_KeyState(&in_fastturn) ? 0.20f : 0.10f);
+						joystick_yaw = axis_value * joy_yawsensitivity->value * modifier;
 						joystick_yaw *= cl_yawspeed->value;
 
 					}
 					else if (strcmp(direction_type, "pitch") == 0)
 					{
-						joystick_pitch = axis_value * joy_pitchsensitivity->value * ( CL_KeyState(&in_fastturn) ? 0.20f : 0.10f);
+						joystick_pitch = axis_value * joy_pitchsensitivity->value * modifier;
 						joystick_pitch *= cl_pitchspeed->value;
 					}
 					else if (strcmp(direction_type, "updown") == 0)
@@ -1436,12 +1428,13 @@ IN_Shutdown(void)
 
 /* ------------------------------------------------------------------ */
 
-void
+qboolean
 IN_SwitchKeyboard(char *out, int out_len)
 {
 	SwkbdConfig kbd;
 	char tmp_out[out_len + 1];
 	Result rc;
+	qboolean retval = false;
 	tmp_out[0] = 0;
 	rc = swkbdCreate(&kbd, 0);
 	if (R_SUCCEEDED(rc)) {
@@ -1449,7 +1442,11 @@ IN_SwitchKeyboard(char *out, int out_len)
 		swkbdConfigSetInitialText(&kbd, out);
 		rc = swkbdShow(&kbd, tmp_out, out_len);
 		if (R_SUCCEEDED(rc))
-			strncpy(out, tmp_out, out_len); 
+		{
+			strncpy(out, tmp_out, out_len);
+			retval = true;
+		}
 		swkbdClose(&kbd);
 	}
+	return retval;
 }

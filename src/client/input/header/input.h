@@ -59,8 +59,4 @@ void IN_Update(void);
  */
 void In_FlushQueue(void);
 
-#ifdef __SWITCH__
-void IN_SwitchKeyboard(char *out, int out_len);
-#endif
-
 #endif

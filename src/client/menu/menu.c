@@ -858,7 +858,7 @@ char *bindnames[][2] =
     {"+back", "backpedal"},
     {"+left", "turn left"},
     {"+right", "turn right"},
-    {"+speed", "run"},
+    {"+speed", "run / turn faster"},
     {"+moveleft", "step left"},
     {"+moveright", "step right"},
     {"+strafe", "sidestep"},
@@ -874,8 +874,7 @@ char *bindnames[][2] =
     {"invdrop", "drop item"},
     {"invprev", "prev item"},
     {"invnext", "next item"},
-    {"cmd help", "help computer"},
-    {"+fastturn", "faster turn"}
+    {"cmd help", "help computer"}
 };
 #define NUM_BINDNAMES (sizeof bindnames / sizeof bindnames[0])
 

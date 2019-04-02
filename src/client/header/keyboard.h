@@ -223,4 +223,8 @@ void Key_MarkAllUp(void);
 void Haptic_Feedback(char *name, int effect_volume, int effect_x, int effect_y, int effect_z);
 int Key_GetMenuKey(int key);
 
+#ifdef __SWITCH__
+qboolean IN_SwitchKeyboard(char *out, int out_len);
+#endif
+
 #endif
