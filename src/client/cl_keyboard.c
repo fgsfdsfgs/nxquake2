@@ -289,7 +289,39 @@ Key_Console(int key)
 		}
 	}
 
-	if ((key == K_ENTER) || (key == K_KP_ENTER))
+	char oldtext[64], text[64], fulltext[65];
+
+	if (key == K_JOY3) {
+		
+		// Ch0wW: ToDo : Remove ] ?
+		if (key_linepos > 1)
+		{
+			strcpy(text, key_lines[edit_line]);
+			memmove(text, text+1, strlen(text));
+			strcpy(oldtext, text);								// Check line
+		}
+
+		// Initiate the console
+		IN_SwitchKeyboard(text, 64);
+
+		// No action if no text or same as earlier
+		if (!strlen(text) || !strcmp(oldtext, text))
+			return;
+
+		sprintf(fulltext, "]%s", text);
+		Cbuf_AddText(text);
+		Cbuf_AddText("\n");
+		Com_Printf("%s\n", fulltext);
+
+		// Now, add console line to history
+		strcpy(key_lines[edit_line], fulltext);
+		edit_line = (edit_line + 1) & (NUM_KEY_LINES-1);
+		history_line = edit_line;
+		key_lines[edit_line][0] = ']';
+		key_linepos = 1;
+	}
+
+	if ((key == K_ENTER) || (key == K_KP_ENTER) || (key == K_JOY1) )		// Add to Console
 	{
 		/* slash text are commands, else chat */
 		if ((key_lines[edit_line][1] == '\\') ||
@@ -318,14 +350,14 @@ Key_Console(int key)
 		return;
 	}
 
-	if (key == K_TAB)
+	if (key == K_TAB || key == K_JOY11)	// (+) autocompletes
 	{
 		/* command completion */
 		CompleteCommand();
 		return;
 	}
 
-	if ((key == K_BACKSPACE) || (key == K_LEFTARROW) ||
+	if ((key == K_BACKSPACE) || (key == K_LEFTARROW) || key == K_JOY13 ||
 		(key == K_KP_LEFTARROW) ||
 		((key == 'h') && (keydown[K_CTRL])))
 	{
@@ -345,7 +377,7 @@ Key_Console(int key)
 		return;
 	}
 
-	if ((key == K_UPARROW) || (key == K_KP_UPARROW) ||
+	if ((key == K_UPARROW) || (key == K_KP_UPARROW) || ( key == K_JOY14 ) ||
 		((key == 'p') && keydown[K_CTRL]))
 	{
 		do
@@ -365,7 +397,7 @@ Key_Console(int key)
 		return;
 	}
 
-	if ((key == K_DOWNARROW) || (key == K_KP_DOWNARROW) ||
+	if ((key == K_DOWNARROW) || (key == K_KP_DOWNARROW) || ( key == K_JOY16 ) ||
 		((key == 'n') && keydown[K_CTRL]))
 	{
 		if (history_line == edit_line)
@@ -394,14 +426,14 @@ Key_Console(int key)
 		return;
 	}
 
-	if ((key == K_PGUP) || (key == K_KP_PGUP) || (key == K_MWHEELUP) ||
+	if ((key == K_PGUP) || (key == K_KP_PGUP) || (key == K_MWHEELUP) || (key == K_TRIG_LEFT) ||
 		(key == K_MOUSE4))
 	{
 		con.display -= 2;
 		return;
 	}
 
-	if ((key == K_PGDN) || (key == K_KP_PGDN) || (key == K_MWHEELDOWN) ||
+	if ((key == K_PGDN) || (key == K_KP_PGDN) || (key == K_MWHEELDOWN) || (key == K_TRIG_RIGHT) ||
 		(key == K_MOUSE5))
 	{
 		con.display += 2;
@@ -477,6 +509,8 @@ Key_Console(int key)
 	}
 }
 
+
+
 qboolean chat_team;
 char chat_buffer[MAXCMDLINE];
 int chat_bufferlen = 0;
@@ -545,7 +579,7 @@ Key_Message(int key)
 		return;
 	}
 
-	if (key == K_LEFTARROW)
+	if (key == K_LEFTARROW || key == K_JOY13)
 	{
 		if (chat_cursorpos > 0)
 		{
@@ -567,7 +601,7 @@ Key_Message(int key)
 		return;
 	}
 
-	if (key == K_RIGHTARROW)
+	if (key == K_RIGHTARROW || key == K_JOY15)
 	{
 		if (chat_buffer[chat_cursorpos])
 		{
@@ -973,6 +1007,12 @@ Key_Init(void)
 	consolekeys[K_KP_PLUS] = true;
 	consolekeys[K_KP_MINUS] = true;
 	consolekeys[K_KP_5] = true;
+
+	for (i = 0 ; i < 16 ; i++)
+	consolekeys[K_JOY1 + i] = true;
+
+	consolekeys[K_TRIG_LEFT] = true;
+	consolekeys[K_TRIG_RIGHT] = true;
 
 	consolekeys['`'] = false;
 	consolekeys['~'] = false;

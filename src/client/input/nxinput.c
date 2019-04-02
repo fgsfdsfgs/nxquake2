@@ -89,6 +89,15 @@ SDL 1.2 remove this statement!"
 #define MOUSE_MAX 3000
 #define MOUSE_MIN 40
 
+#include <switch.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/errno.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+
 /* Globals */
 static int mouse_x, mouse_y;
 static int old_mouse_x, old_mouse_y;
@@ -190,6 +199,8 @@ static cvar_t *joy_haptic_magnitude;
 #endif
 
 extern void GLimp_GrabInput(qboolean grab);
+
+extern kbutton_t in_fastturn;
 
 /* ------------------------------------------------------------------ */
 
@@ -637,12 +648,13 @@ IN_Update(void)
 					}
 					else if (strcmp(direction_type, "yaw") == 0)
 					{
-						joystick_yaw = axis_value * joy_yawsensitivity->value * 0.25f;
+						joystick_yaw = axis_value * joy_yawsensitivity->value * ( CL_KeyState(&in_fastturn) ? 0.20f : 0.10f);
 						joystick_yaw *= cl_yawspeed->value;
+
 					}
 					else if (strcmp(direction_type, "pitch") == 0)
 					{
-						joystick_pitch = axis_value * joy_pitchsensitivity->value * 0.25f;
+						joystick_pitch = axis_value * joy_pitchsensitivity->value * ( CL_KeyState(&in_fastturn) ? 0.20f : 0.10f);
 						joystick_pitch *= cl_pitchspeed->value;
 					}
 					else if (strcmp(direction_type, "updown") == 0)
