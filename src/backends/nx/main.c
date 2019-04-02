@@ -28,59 +28,18 @@
 #include "../../common/header/common.h"
 #include <switch.h>
 
-// size_t __nx_heap_size = 0x20000000;
-
-void registerHandler(void);
-
-static Thread actual_thread;
-
-static void actual_main(void *arg)
-{
-	static int iargc = 1;
-	static const char *iargv[] = { "nxquake2.nro", NULL };
-	is_portable = 1;
-	Qcommon_Init(iargc, iargv);
-}
-
 int
 main(int argc, char **argv)
 {
-/*
-  u64 core_mask = 0;
-  Result rc = svcGetInfo(&core_mask, 0, CUR_PROCESS_HANDLE, 0);
-  if (R_FAILED(rc)) {
-    Sys_Error("svcGetInfo() failed: %d\n", rc);
-    return -1;
-  }
+	static int iargc = 1;
+	static const char *iargv[] = { "nxquake2.nro", NULL };
 
-  rc = threadCreate(&actual_thread, actual_main, NULL, 0x200000, 0x3B, -2);
-  if (R_FAILED(rc)) {
-    Sys_Error("threadCreate() failed: %d\n", rc);
-    return -1;
-  }
+	is_portable = 1;
+	Qcommon_Init(iargc, (char**)iargv);
 
-  rc = svcSetThreadCoreMask(actual_thread.handle, -1, core_mask);
-  if (R_FAILED(rc)) {
-    Sys_Error("svcSetThreadCoreMask() failed: %d\n", rc);
-    return -1;
-  }
-
-  rc = threadStart(&actual_thread);
-  if (R_FAILED(rc)) {
-    Sys_Error("threadStart() failed: %d\n", rc);
-    return -1;
-  }
-
-  threadWaitForExit(&actual_thread);
-  threadClose(&actual_thread);
-	return 0;
-*/
-	actual_main(NULL);
-#ifdef __SWITCH__
 	// we drop out of the loop when the user presses HOME, so we gotta
 	// handle quit properly
 	Sys_Quit();
-#endif
+
 	return 0;
 }
-

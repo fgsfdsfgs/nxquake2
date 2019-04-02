@@ -284,6 +284,12 @@ SV_CheckTimeouts(void)
 	int droppoint;
 	int zombiepoint;
 
+#ifdef __SWITCH__
+	// don't timeout ourselves in a singleplayer game
+	// the console might have been sleeping
+	if (maxclients->value == 1) return;
+#endif
+
 	droppoint = svs.realtime - 1000 * timeout->value;
 	zombiepoint = svs.realtime - 1000 * zombietime->value;
 

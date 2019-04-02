@@ -48,6 +48,34 @@ qboolean stdin_active = false;
 // Console logfile
 extern FILE	*logfile;
 
+static AppletHookCookie applet_cookie;
+static qboolean applet_focus = true;
+
+static void
+Applet_Callback(AppletHookType hook, void *param)
+{
+	extern cvar_t *cl_paused;
+
+	if (hook != AppletHookType_OnFocusState || !cl_paused)
+		return;
+
+	qboolean new_focus = (appletGetFocusState() != AppletFocusState_NotFocusedHomeSleep);
+	qboolean can_pause = Cvar_VariableValue("maxclients") == 1 && Com_ServerState();
+
+	if (applet_focus && !new_focus)
+	{
+		if (!cl_paused->value && can_pause)
+			Cvar_SetValue("paused", 1);
+		applet_focus = false;
+	}
+	else if (!applet_focus && new_focus)
+	{
+		if (cl_paused->value && can_pause)
+			Cvar_SetValue("paused", 0);
+		applet_focus = true;
+	}
+}
+
 /* ================================================================ */
 
 void
@@ -78,6 +106,7 @@ Sys_Error(char *error, ...)
 
 	if (SDL_WasInit(0)) SDL_Quit();
 	NET_Shutdown();
+	appletUnhook(&applet_cookie);
 	appletUnlockExit();
 	exit(1);
 }
@@ -101,6 +130,7 @@ Sys_Quit(void)
 
 	if (SDL_WasInit(0)) SDL_Quit();
 	NET_Shutdown();
+	appletUnhook(&applet_cookie);
 	appletUnlockExit();
 	exit(0);
 }
@@ -109,6 +139,8 @@ void
 Sys_Init(void)
 {
 	appletLockExit();
+	appletSetFocusHandlingMode(AppletFocusHandlingMode_NoSuspend);
+	appletHook(&applet_cookie, Applet_Callback, NULL);
 }
 
 /* ================================================================ */
