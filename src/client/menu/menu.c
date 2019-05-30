@@ -34,8 +34,8 @@
 #include "../sound/header/local.h"
 #include "header/qmenu.h"
 
-extern cvar_t *joy_yawsensitivity;
-extern cvar_t *joy_pitchsensitivity;
+extern cvar_t *joy_yawsensitivity, *joy_fastyaw_sensitivity;
+extern cvar_t *joy_pitchsensitivity, *joy_fastpitch_sensitivity;
 
 static int m_main_cursor;
 
@@ -849,6 +849,26 @@ M_Menu_Multiplayer_f(void)
  * KEYS MENU
  */
 
+#ifdef __SWITCH__
+char *bindnames[][2] =
+{
+    {"+attack", "attack"},
+    {"weapnext", "next weapon"},
+    {"weapprev", "previous weapon"},
+    {"+speed", "run"},
+    {"centerview", "center view"},
+    {"+moveup", "up / jump"},
+    {"+movedown", "down / crouch"},
+    {"inven", "inventory"},
+    {"invuse", "use item"},
+    {"invdrop", "drop item"},
+    {"invprev", "prev item"},
+    {"invnext", "next item"},
+    {"cmd help", "help computer"},
+    {"+fastturn", "fast turn"},
+    {"+joyaltselector", "enable alt joy keys"}
+};
+#else
 char *bindnames[][2] =
 {
     {"+attack", "attack"},
@@ -877,6 +897,7 @@ char *bindnames[][2] =
     {"cmd help", "help computer"},
     {"+joyaltselector", "enable alt joy keys"}
 };
+#endif
 #define NUM_BINDNAMES (sizeof bindnames / sizeof bindnames[0])
 
 int keys_cursor;
@@ -1107,8 +1128,8 @@ static menuframework_s s_options_menu;
 static menuaction_s s_options_defaults_action;
 static menuaction_s s_options_customize_options_action;
 #ifdef __SWITCH__
-static menuslider_s s_options_x_sensitivity_slider;
-static menuslider_s s_options_y_sensitivity_slider;
+static menuslider_s s_options_x_sensitivity_slider, s_options_fastx_sensitivity_slider;
+static menuslider_s s_options_y_sensitivity_slider, s_options_fasty_sensitivity_slider;
 #else
 static menuslider_s s_options_sensitivity_slider;
 #endif
@@ -1165,6 +1186,16 @@ static void JoyYSpeedFunc(void *unused)
 {
     Cvar_SetValue("joy_pitchsensitivity", s_options_y_sensitivity_slider.curvalue);
 }
+
+static void JoyFastXSpeedFunc(void *unused)
+{
+    Cvar_SetValue("joy_fastyaw_sensitivity", s_options_fastx_sensitivity_slider.curvalue);
+}
+
+static void JoyFastYSpeedFunc(void *unused)
+{
+    Cvar_SetValue("joy_fastpitch_sensitivity", s_options_fasty_sensitivity_slider.curvalue);
+}
 #else
 static void
 MouseSpeedFunc(void *unused)
@@ -1201,6 +1232,8 @@ ControlsSetMenuItemValues(void)
 #ifdef __SWITCH__
 s_options_x_sensitivity_slider.curvalue =  joy_yawsensitivity->value;
 s_options_y_sensitivity_slider.curvalue = joy_pitchsensitivity->value;
+s_options_fastx_sensitivity_slider.curvalue =  joy_fastyaw_sensitivity->value;
+s_options_fasty_sensitivity_slider.curvalue = joy_fastpitch_sensitivity->value;
 #else
     s_options_sensitivity_slider.curvalue = sensitivity->value * 2;
 #endif
@@ -1378,7 +1411,7 @@ Options_MenuInit(void)
 {
 
 #ifdef __SWITCH__
-    int y = 10;
+    int y = 30;
 #else
     int y = 0;
 #endif
@@ -1480,6 +1513,21 @@ Options_MenuInit(void)
     s_options_y_sensitivity_slider.minvalue = 1;
     s_options_y_sensitivity_slider.maxvalue = 20;
 
+    s_options_fastx_sensitivity_slider.generic.type = MTYPE_SLIDER;
+    s_options_fastx_sensitivity_slider.generic.x = 0;
+    s_options_fastx_sensitivity_slider.generic.y = 80;
+    s_options_fastx_sensitivity_slider.generic.name = "Fast-X Sensitivity";
+    s_options_fastx_sensitivity_slider.generic.callback = JoyFastXSpeedFunc;
+    s_options_fastx_sensitivity_slider.minvalue = 1;
+    s_options_fastx_sensitivity_slider.maxvalue = 20;
+
+    s_options_fasty_sensitivity_slider.generic.type = MTYPE_SLIDER;
+    s_options_fasty_sensitivity_slider.generic.x = 0;
+    s_options_fasty_sensitivity_slider.generic.y = 90;
+    s_options_fasty_sensitivity_slider.generic.name = "Fast-Y Sensitivity";
+    s_options_fasty_sensitivity_slider.generic.callback = JoyFastYSpeedFunc;
+    s_options_fasty_sensitivity_slider.minvalue = 1;
+    s_options_fasty_sensitivity_slider.maxvalue = 20;
 
 #else
     s_options_sensitivity_slider.generic.type = MTYPE_SLIDER;
@@ -1564,14 +1612,20 @@ Options_MenuInit(void)
 #ifdef __SWITCH__
     Menu_AddItem(&s_options_menu, (void *)&s_options_x_sensitivity_slider);
     Menu_AddItem(&s_options_menu, (void *)&s_options_y_sensitivity_slider);
+    Menu_AddItem(&s_options_menu, (void *)&s_options_fastx_sensitivity_slider);
+    Menu_AddItem(&s_options_menu, (void *)&s_options_fasty_sensitivity_slider);
 #else
     Menu_AddItem(&s_options_menu, (void *)&s_options_sensitivity_slider);
 #endif
 
     Menu_AddItem(&s_options_menu, (void *)&s_options_alwaysrun_box);
     Menu_AddItem(&s_options_menu, (void *)&s_options_invertmouse_box);
+
+#ifndef __SWITCH__
     Menu_AddItem(&s_options_menu, (void *)&s_options_lookstrafe_box);
     Menu_AddItem(&s_options_menu, (void *)&s_options_freelook_box);
+#endif
+
     Menu_AddItem(&s_options_menu, (void *)&s_options_crosshair_box);
 
     if (show_haptic)

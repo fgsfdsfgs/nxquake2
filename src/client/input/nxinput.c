@@ -172,6 +172,8 @@ static cvar_t *windowed_mouse;
 /* Joystick sensitivity */
 cvar_t *joy_yawsensitivity;
 cvar_t *joy_pitchsensitivity;
+cvar_t *joy_fastyaw_sensitivity;
+cvar_t *joy_fastpitch_sensitivity;
 static cvar_t *joy_forwardsensitivity;
 static cvar_t *joy_sidesensitivity;
 static cvar_t *joy_upsensitivity;
@@ -196,6 +198,7 @@ static cvar_t *joy_haptic_magnitude;
 extern void GLimp_GrabInput(qboolean grab);
 
 extern kbutton_t in_speed;
+extern kbutton_t in_fastturn;
 
 /* ------------------------------------------------------------------ */
 
@@ -644,13 +647,22 @@ IN_Update(void)
 					}
 					else if (strcmp(direction_type, "yaw") == 0)
 					{
-						joystick_yaw = axis_value * joy_yawsensitivity->value * modifier;
+						if (in_fastturn.state & 1) {
+						joystick_yaw = axis_value * joy_fastyaw_sensitivity->value * 0.10;
+						} else {
+							joystick_yaw = axis_value * joy_yawsensitivity->value * 0.10;
+						}
 						joystick_yaw *= cl_yawspeed->value;
 
 					}
 					else if (strcmp(direction_type, "pitch") == 0)
 					{
-						joystick_pitch = axis_value * joy_pitchsensitivity->value * modifier;
+						if (in_fastturn.state & 1) {
+						joystick_pitch = axis_value * joy_fastpitch_sensitivity->value * 0.10;
+						} else {
+						joystick_pitch = axis_value * joy_pitchsensitivity->value * 0.10;
+						}
+						
 						joystick_pitch *= cl_pitchspeed->value;
 					}
 					else if (strcmp(direction_type, "updown") == 0)
@@ -1275,6 +1287,10 @@ IN_Init(void)
 
 	joy_yawsensitivity = Cvar_Get("joy_yawsensitivity", "4.0", CVAR_ARCHIVE);
 	joy_pitchsensitivity = Cvar_Get("joy_pitchsensitivity", "4.0", CVAR_ARCHIVE);
+
+	joy_fastyaw_sensitivity = Cvar_Get("joy_fastyaw_sensitivity", "4.0", CVAR_ARCHIVE);
+	joy_fastpitch_sensitivity = Cvar_Get("joy_fastpitch_sensitivity", "4.0", CVAR_ARCHIVE);
+
 	joy_forwardsensitivity = Cvar_Get("joy_forwardsensitivity", "1.0", CVAR_ARCHIVE);
 	joy_sidesensitivity = Cvar_Get("joy_sidesensitivity", "1.0", CVAR_ARCHIVE);
 	joy_upsensitivity = Cvar_Get("joy_upsensitivity", "1.0", CVAR_ARCHIVE);
