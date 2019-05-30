@@ -191,18 +191,10 @@ ApplyChanges(void *unused)
 		/* Restarts automatically */
 		Cvar_SetValue("r_mode", -1);
 	}
-<<<<<<< HEAD
 #else
 	restart = (fb_big != s_mode_list.curvalue);
 	fb_big = s_mode_list.curvalue;
 #endif
-=======
-	else
-	{
-		/* Restarts automatically */
-		Cvar_SetValue("r_mode", s_mode_list.curvalue);
-	}
->>>>>>> 1668f5950ebb32317a8a9314c6bcd66b6bb0f070
 
 	/* UI scaling */
 	if (s_uiscale_list.curvalue == 0)
@@ -271,12 +263,8 @@ VID_MenuInit(void)
 			"[OpenGL 1.4]",
 			"[OpenGL 3.2]",
 			"[Software  ]",
-<<<<<<< HEAD
 			"[Custom    ]",
 #endif
-=======
-			CUSTOM_MODE_NAME,
->>>>>>> 1668f5950ebb32317a8a9314c6bcd66b6bb0f070
 			0
 	};
 
