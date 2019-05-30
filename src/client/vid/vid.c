@@ -395,6 +395,9 @@ VID_LoadRenderer(void)
 	ri.FS_Gamedir = FS_Gamedir;
 	ri.FS_LoadFile = FS_LoadFile;
 	ri.GLimp_InitGraphics = GLimp_InitGraphics;
+	#ifndef __SWITCH__
+	ri.GLimp_GetDesktopMode = GLimp_GetDesktopMode;
+	#endif
 	ri.Sys_Error = Com_Error;
 	ri.Vid_GetModeInfo = VID_GetModeInfo;
 	ri.Vid_MenuInit = VID_MenuInit;
@@ -500,7 +503,7 @@ void
 VID_Init(void)
 {
 	// Console variables
-	vid_fullscreen = Cvar_Get("vid_gamma", "1.0", CVAR_ARCHIVE);
+	vid_gamma = Cvar_Get("vid_gamma", "1.0", CVAR_ARCHIVE);
 	vid_fullscreen = Cvar_Get("vid_fullscreen", "0", CVAR_ARCHIVE);
 	vid_renderer = Cvar_Get("vid_renderer", "gl1", CVAR_ARCHIVE);
 

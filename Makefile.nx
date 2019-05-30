@@ -30,9 +30,9 @@ include $(DEVKITPRO)/libnx/switch_rules
 #     - icon.jpg
 #     - <libnx folder>/default_icon.jpg
 #---------------------------------------------------------------------------------
-APP_TITLE	:=	NXQuake2
-APP_AUTHOR	:=	fgsfds
-APP_VERSION	:=	0.2.0
+APP_TITLE	:=	[Beta] NXQuake2
+APP_AUTHOR	:=	fgsfds / Ch0wW / Yamagi
+APP_VERSION	:=	0.2.1 - v7.41
 
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build

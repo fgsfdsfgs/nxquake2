@@ -146,6 +146,9 @@ ResetDefaults(void *unused)
 	VID_MenuInit();
 }
 
+#define CUSTOM_MODE_NAME "[Custom    ]"
+#define AUTO_MODE_NAME   "[Auto      ]"
+
 static void
 ApplyChanges(void *unused)
 {
@@ -175,13 +178,15 @@ ApplyChanges(void *unused)
 		}
 	}
 
-	/* custom mode */
-	if (s_mode_list.curvalue != GetCustomValue(&s_mode_list))
+	/* auto mode */
+	if (!strcmp(s_mode_list.itemnames[s_mode_list.curvalue],
+		AUTO_MODE_NAME))
 	{
 		/* Restarts automatically */
-		Cvar_SetValue("r_mode", s_mode_list.curvalue);
+		Cvar_SetValue("r_mode", -2);
 	}
-	else
+	else if (!strcmp(s_mode_list.itemnames[s_mode_list.curvalue],
+		CUSTOM_MODE_NAME))
 	{
 		/* Restarts automatically */
 		Cvar_SetValue("r_mode", -1);
@@ -303,7 +308,8 @@ VID_MenuInit(void)
 		"[3840 2160 ]",
 		"[4096 2160 ]",
 		"[5120 2880 ]",
-		"[custom    ]",
+		AUTO_MODE_NAME,
+		CUSTOM_MODE_NAME,
 		0
 	};
 #endif
@@ -428,8 +434,14 @@ VID_MenuInit(void)
 	{
 		s_mode_list.curvalue = r_mode->value;
 	}
+	else if (r_mode->value == -2)
+	{
+		// 'auto' is before 'custom'
+		s_mode_list.curvalue = GetCustomValue(&s_mode_list) - 1;
+	}
 	else
 	{
+		// 'custom'
 		s_mode_list.curvalue = GetCustomValue(&s_mode_list);
 	}
 #endif
