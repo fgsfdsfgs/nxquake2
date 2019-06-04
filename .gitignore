@@ -1,4 +1,6 @@
 /build/
+/build_xatrix/
+/build_rogue/
 /release/
 *.mk
 *.user

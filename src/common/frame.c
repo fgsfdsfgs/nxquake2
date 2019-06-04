@@ -283,7 +283,13 @@ Qcommon_Init(int argc, char **argv)
 
 	// remember the initial game name that might have been set on commandline
 	{
+		#ifdef XATRIX
+		cvar_t* gameCvar = Cvar_Get("game", "xatrix", CVAR_LATCH | CVAR_SERVERINFO);
+		#elif ROGUE
+		cvar_t* gameCvar = Cvar_Get("game",  "rogue", CVAR_LATCH | CVAR_SERVERINFO);
+		#else
 		cvar_t* gameCvar = Cvar_Get("game", "", CVAR_LATCH | CVAR_SERVERINFO);
+		#endif
 		const char* game = "";
 
 		if(gameCvar->string && gameCvar->string[0])
