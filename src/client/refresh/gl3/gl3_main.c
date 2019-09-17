@@ -200,7 +200,7 @@ GL3_Register(void)
 	gl_msaa_samples = ri.Cvar_Get ( "gl_msaa_samples", "0", CVAR_ARCHIVE );
 	gl_retexturing = ri.Cvar_Get("gl_retexturing", "1", CVAR_ARCHIVE);
 	gl3_debugcontext = ri.Cvar_Get("gl3_debugcontext", "0", 0);
-	r_mode = ri.Cvar_Get("r_mode", "4", CVAR_ARCHIVE);
+	r_mode = ri.Cvar_Get("r_mode", "-2", CVAR_ARCHIVE);
 	r_customwidth = ri.Cvar_Get("r_customwidth", "1024", CVAR_ARCHIVE);
 	r_customheight = ri.Cvar_Get("r_customheight", "768", CVAR_ARCHIVE);
 	gl3_particle_size = ri.Cvar_Get("gl3_particle_size", "40", CVAR_ARCHIVE);
@@ -470,7 +470,11 @@ GL3_Init(void)
 	GL3_Register();
 
 	/* set our "safe" mode */
+#ifdef __SWITCH__
+	gl3state.prev_mode = 0;
+#else
 	gl3state.prev_mode = 4;
+#endif
 	//gl_state.stereo_mode = gl1_stereo->value;
 
 	/* create the window and set up the context */
