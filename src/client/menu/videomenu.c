@@ -435,7 +435,7 @@ VID_MenuInit(void)
 	s_mode_list.generic.y = (y += 10);
 	s_mode_list.itemnames = resolutions;
 
-	if (r_mode->value)
+	if (r_mode->value >= 0)
 	{
 		s_mode_list.curvalue = r_mode->value;
 	}
