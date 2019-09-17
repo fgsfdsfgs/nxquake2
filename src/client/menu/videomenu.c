@@ -29,10 +29,6 @@
 #include "../../client/menu/header/qmenu.h"
 #include "header/qmenu.h"
 
-#ifdef __SWITCH__
-extern qboolean fb_big;
-#endif
-
 extern void M_ForceMenuOff(void);
 
 static cvar_t *r_mode;
@@ -174,6 +170,7 @@ ApplyChanges(void *unused)
 			restart = true;
 		}
 	}
+#endif
 
 	/* custom mode */
 	if (s_mode_list.curvalue != GetCustomValue(&s_mode_list))
@@ -186,10 +183,6 @@ ApplyChanges(void *unused)
 		/* Restarts automatically */
 		Cvar_SetValue("r_mode", -1);
 	}
-#else
-	restart = (fb_big != s_mode_list.curvalue);
-	fb_big = s_mode_list.curvalue;
-#endif
 
 	/* UI scaling */
 	if (s_uiscale_list.curvalue == 0)
@@ -267,6 +260,7 @@ VID_MenuInit(void)
 	static const char *resolutions[] = {
 		"[1280 720  ]",
 		"[1920 1080 ]",
+		"[custom    ]",
 		0
 	};
 #else
@@ -421,10 +415,7 @@ VID_MenuInit(void)
 	s_mode_list.generic.y = (y += 10);
 	s_mode_list.itemnames = resolutions;
 
-#ifdef __SWITCH__
-	s_mode_list.curvalue = fb_big;
-#else
-	if (r_mode->value >= 0)
+	if (r_mode->value)
 	{
 		s_mode_list.curvalue = r_mode->value;
 	}
@@ -432,7 +423,6 @@ VID_MenuInit(void)
 	{
 		s_mode_list.curvalue = GetCustomValue(&s_mode_list);
 	}
-#endif
 
 	s_brightness_slider.generic.type = MTYPE_SLIDER;
 	s_brightness_slider.generic.name = "brightness";

@@ -208,6 +208,10 @@ typedef struct vidmode_s
 
 // This must be the same as in videomenu.c!
 vidmode_t vid_modes[] = {
+#ifdef __SWITCH__
+	{"Mode  0: 1280x720", 1280, 720, 0},
+	{"Mode  1: 1920x1080", 1920, 1080, 1},
+#else
 	{"Mode  0:  320x240", 320, 240, 0},
 	{"Mode  1:  400x300", 400, 300, 1},
 	{"Mode  2:  512x384", 512, 384, 2},
@@ -240,6 +244,7 @@ vidmode_t vid_modes[] = {
 	{"Mode 29: 3840x2160", 3840, 2160, 29},
 	{"Mode 30: 4096x2160", 4096, 2160, 30},
 	{"Mode 31: 5120x2880", 5120, 2880, 31},
+#endif
 };
 
 #define VID_NUM_MODES (sizeof(vid_modes) / sizeof(vid_modes[0]))

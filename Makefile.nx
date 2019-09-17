@@ -43,8 +43,8 @@ SOURCES		:=	\
 	src/game \
 	src/client/menu \
 	src/client \
-	src/client/refresh/gl3_nx/glad \
-	src/client/refresh/gl3_nx \
+	src/client/refresh/gl3/glad/src \
+	src/client/refresh/gl3 \
 	src/client/refresh/files \
 	src/server \
 	src/backends/nx \
@@ -60,14 +60,14 @@ SOURCEFILES	:=	src/client/sound/sdl.c \
 	src/client/sound/ogg.c \
 	src/client/sound/sound.c \
 	src/client/sound/wave.c \
-	src/client/vid/glimp_egl.c \
+	src/client/vid/glimp_sdl.c \
 	src/client/vid/vid.c \
 	src/client/input/nxinput.c
 
 DATA		:=	data
 INCLUDES	:=	
 DEFINES		+=	-DYQ2OSTYPE=\"NX\" -DYQ2ARCH=\"arm64\" -DOGG -DSDL2 \
-				-DBUILD_DATE=\"666\" -DUSE_FILE32API -DUSE_OPENAL -DSTATIC_OPENAL
+				-DBUILD_DATE=\"666\" -DUSE_FILE32API -DUSE_OPENAL -DSTATIC_OPENAL -DDEBUG
 EXEFS_SRC	:=	exefs_src
 #ROMFS	:=	romfs
 

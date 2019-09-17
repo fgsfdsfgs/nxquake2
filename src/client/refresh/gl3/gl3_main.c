@@ -367,7 +367,11 @@ GL3_SetMode(void)
 	{
 		if (r_mode->value == -1)
 		{
+#ifdef __SWITCH__
+			gl3state.prev_mode = 0; /* safe default for custom mode */
+#else
 			gl3state.prev_mode = 4; /* safe default for custom mode */
+#endif
 		}
 		else
 		{
@@ -1759,6 +1763,7 @@ void R_Printf(int level, const char* msg, ...)
 	va_end(argptr);
 }
 
+#ifndef __SWITCH__
 /*
  * this is only here so the functions in shared source files
  * (shared.c, rand.c, flash.c, mem.c/hunk.c) can link
@@ -1784,3 +1789,4 @@ Com_Printf(char *msg, ...)
 	ri.Com_VPrintf(PRINT_ALL, msg, argptr);
 	va_end(argptr);
 }
+#endif

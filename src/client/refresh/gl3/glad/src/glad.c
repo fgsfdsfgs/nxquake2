@@ -22,7 +22,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <glad/glad.h>
+
+#ifdef __SWITCH__
+// dkp's switch-glad was a mistake
+# include "../include/glad/glad.h"
+#else
+# include <glad/glad.h>
+#endif
 
 struct gladGLversionStruct GLVersion;
 
