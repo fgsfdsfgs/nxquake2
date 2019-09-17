@@ -206,7 +206,7 @@ typedef struct vidmode_s
 	int mode;
 } vidmode_t;
 
-// This must be the same as in videomenu.c!
+// This must be the same as VID_MenuInit()->resolutions[] in videomenu.c!
 vidmode_t vid_modes[] = {
 #ifdef __SWITCH__
 	{"Mode  0: 1280x720", 1280, 720, 0},
@@ -400,6 +400,7 @@ VID_LoadRenderer(void)
 	ri.FS_Gamedir = FS_Gamedir;
 	ri.FS_LoadFile = FS_LoadFile;
 	ri.GLimp_InitGraphics = GLimp_InitGraphics;
+	ri.GLimp_GetDesktopMode = GLimp_GetDesktopMode;
 	ri.Sys_Error = Com_Error;
 	ri.Vid_GetModeInfo = VID_GetModeInfo;
 	ri.Vid_MenuInit = VID_MenuInit;
@@ -505,7 +506,7 @@ void
 VID_Init(void)
 {
 	// Console variables
-	vid_fullscreen = Cvar_Get("vid_gamma", "1.0", CVAR_ARCHIVE);
+	vid_gamma = Cvar_Get("vid_gamma", "1.0", CVAR_ARCHIVE);
 	vid_fullscreen = Cvar_Get("vid_fullscreen", "0", CVAR_ARCHIVE);
 	vid_renderer = Cvar_Get("vid_renderer", "gl1", CVAR_ARCHIVE);
 

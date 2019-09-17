@@ -43,9 +43,7 @@ D_ViewChanged
 static void
 D_ViewChanged (void)
 {
-	scale_for_mip = xscale;
-	if (yscale > xscale)
-		scale_for_mip = yscale;
+	scale_for_mip = sqrt(xscale*xscale + yscale*yscale);
 
 	d_pix_min = r_refdef.vrect.height / 240;
 	if (d_pix_min < 1)
@@ -203,7 +201,7 @@ R_SetUpFrustumIndexes (void)
 			}
 		}
 
-	// FIXME: do just once at start
+		// FIXME: do just once at start
 		pfrustum_indexes[i] = pindex;
 		pindex += 6;
 	}
@@ -385,10 +383,6 @@ R_SetupFrame (void)
 	r_polycount = 0;
 	r_drawnpolycount = 0;
 	r_amodels_drawn = 0;
-	r_outofsurfaces = 0;
-	r_outofverts = 0;
-	r_outofedges = 0;
-	r_outoftriangles = 0;
 
 	// d_setup
 	d_minmip = sw_mipcap->value;

@@ -86,7 +86,6 @@ static void R_PolysetSetEdgeTable(void);
 static void R_RasterizeAliasPolySmooth(const entity_t *currententity);
 
 // ======================
-// PGM
 // 64 65 66 67 68 69 70 71   72 73 74 75 76 77 78 79
 static const byte irtable[256] = {
 	79, 78, 77, 76, 75, 74, 73, 72,		// black/white
@@ -129,7 +128,6 @@ static const byte irtable[256] = {
 	208, 208, 64, 64, 70, 71, 72, 64,		// mishmash1
 	66, 68, 70, 64, 65, 66, 67, 68};		// mishmash2
 
-// PGM
 // ======================
 
 /*
@@ -220,7 +218,7 @@ R_PushEdgesSpan(int u, int v, int count,
 	if (d_pedgespanpackage >= triangles_max)
 	{
 		// no space any more
-		r_outoftriangles++;
+		r_outoftriangles = true;
 		return;
 	}
 
@@ -571,6 +569,7 @@ R_PolysetDrawSpans8_66(const entity_t *currententity, spanpackage_t *pspanpackag
 		if (lcount > 0)
 		{
 			int	pos_shift = (pspanpackage->v * vid.width) + pspanpackage->u;
+			qboolean	zdamaged = false;
 
 			lpdest = d_viewbuffer + pos_shift;
 			lpz = d_pzbuffer + pos_shift;
@@ -588,6 +587,7 @@ R_PolysetDrawSpans8_66(const entity_t *currententity, spanpackage_t *pspanpackag
 
 					*lpdest = vid_alphamap[temp*256 + *lpdest];
 					*lpz = lzi >> SHIFT16XYZ;
+					zdamaged = true;
 				}
 				lpdest++;
 				lzi += r_zistepx;
@@ -604,6 +604,15 @@ R_PolysetDrawSpans8_66(const entity_t *currententity, spanpackage_t *pspanpackag
 					ltfrac &= 0xFFFF;
 				}
 			} while (--lcount);
+
+			if (zdamaged)
+			{
+				// damaged only current line
+				VID_DamageZBuffer(pspanpackage->u, pspanpackage->v);
+				VID_DamageZBuffer(
+					pspanpackage->u + d_aspancount - pspanpackage->count,
+					pspanpackage->v);
+			}
 		}
 
 		pspanpackage++;
@@ -636,6 +645,7 @@ R_PolysetDrawSpansConstant8_66(const entity_t *currententity, spanpackage_t *psp
 		if (lcount > 0)
 		{
 			int	pos_shift = (pspanpackage->v * vid.width) + pspanpackage->u;
+			qboolean	zdamaged = false;
 
 			lpdest = d_viewbuffer + pos_shift;
 			lpz = d_pzbuffer + pos_shift;
@@ -646,11 +656,21 @@ R_PolysetDrawSpansConstant8_66(const entity_t *currententity, spanpackage_t *psp
 				if ((lzi >> SHIFT16XYZ) >= *lpz)
 				{
 					*lpdest = vid_alphamap[r_aliasblendcolor*256 + *lpdest];
+					zdamaged = true;
 				}
 				lpdest++;
 				lzi += r_zistepx;
 				lpz++;
 			} while (--lcount);
+
+			if (zdamaged)
+			{
+				// damaged only current line
+				VID_DamageZBuffer(pspanpackage->u, pspanpackage->v);
+				VID_DamageZBuffer(
+					pspanpackage->u + d_aspancount - pspanpackage->count,
+					pspanpackage->v);
+			}
 		}
 
 		pspanpackage++;
@@ -684,6 +704,7 @@ R_PolysetDrawSpans8_Opaque (const entity_t *currententity, spanpackage_t *pspanp
 			zvalue_t	lzi;
 			zvalue_t	*lpz;
 			int		pos_shift = (pspanpackage->v * vid.width) + pspanpackage->u;
+			qboolean	zdamaged = false;
 
 			lpdest = d_viewbuffer + pos_shift;
 			lpz = d_pzbuffer + pos_shift;
@@ -698,14 +719,13 @@ R_PolysetDrawSpans8_Opaque (const entity_t *currententity, spanpackage_t *pspanp
 			{
 				if ((lzi >> SHIFT16XYZ) >= *lpz)
 				{
-					//PGM
 					if(r_newrefdef.rdflags & RDF_IRGOGGLES && currententity->flags & RF_IR_VISIBLE)
 						*lpdest = ((byte *)vid_colormap)[irtable[*lptex]];
 					else
 						*lpdest = ((byte *)vid_colormap)[*lptex + (llight & 0xFF00)];
-					//PGM
 
 					*lpz = lzi >> SHIFT16XYZ;
+					zdamaged = true;
 				}
 				lpdest++;
 				lzi += r_zistepx;
@@ -722,6 +742,15 @@ R_PolysetDrawSpans8_Opaque (const entity_t *currententity, spanpackage_t *pspanp
 					ltfrac &= 0xFFFF;
 				}
 			} while (--lcount);
+
+			if (zdamaged)
+			{
+				// damaged only current line
+				VID_DamageZBuffer(pspanpackage->u, pspanpackage->v);
+				VID_DamageZBuffer(
+					pspanpackage->u + d_aspancount - pspanpackage->count,
+					pspanpackage->v);
+			}
 		}
 
 		pspanpackage++;
@@ -891,7 +920,7 @@ R_RasterizeAliasPolySmooth(const entity_t *currententity)
 	if ((triangle_spans + initialrightheight) >= triangles_max)
 	{
 		// we dont have enough triangles for save full height
-		r_outoftriangles++;
+		r_outoftriangles = true;
 		return;
 	}
 	originalcount = triangle_spans[initialrightheight].count;
@@ -920,7 +949,7 @@ R_RasterizeAliasPolySmooth(const entity_t *currententity)
 		if ((triangle_spans + initialrightheight + height) >= triangles_max)
 		{
 			// we dont have enough triangles for save full height
-			r_outoftriangles++;
+			r_outoftriangles = true;
 			return;
 		}
 		triangle_spans[initialrightheight + height].count = INT_MIN; // mark end of the spanpackages

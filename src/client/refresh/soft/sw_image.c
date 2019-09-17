@@ -174,6 +174,9 @@ R_LoadPic (char *name, byte *pic, int width, int height, imagetype_t type)
 	image_t	*image;
 	size_t	i, size, full_size;
 
+	if (!pic)
+		return NULL;
+
 	image = R_FindFreeImage();
 	if (strlen(name) >= sizeof(image->name))
 		ri.Sys_Error(ERR_DROP, "%s: '%s' is too long", __func__, name);
@@ -187,6 +190,12 @@ R_LoadPic (char *name, byte *pic, int width, int height, imagetype_t type)
 	size = width * height;
 	full_size = R_GetImageMipsSize(size);
 	image->pixels[0] = malloc(full_size);
+	if (!image->pixels[0])
+	{
+		ri.Sys_Error(ERR_FATAL, "%s: Can't allocate image.", __func__);
+		// code never returns after ERR_FATAL
+		return NULL;
+	}
 	image->transparent = false;
 	for (i=0 ; i<size ; i++)
 	{
@@ -360,7 +369,7 @@ R_LoadHiColorImage(char *name, const char* namewe, const char *ext, imagetype_t 
 		}
 	}
 
-	if (!pic)
+	if (pic)
 	{
 		free(pic);
 	}
@@ -395,10 +404,7 @@ R_LoadImage(char *name, const char* namewe, const char *ext, imagetype_t type)
 			{
 				free(palette);
 			}
-			if (!pic)
-			{
-				free(pic);
-			}
+			free(pic);
 		}
 		else if (strcmp(ext, "wal") == 0)
 		{
@@ -557,6 +563,8 @@ R_InitImages (void)
 	if ( !table16to8 )
 	{
 		ri.Sys_Error(ERR_FATAL, "%s: Couldn't load pics/16to8.dat", __func__);
+		// code never returns after ERR_FATAL
+		return;
 	}
 	d_16to8table = malloc(0x10000);
 	memcpy(d_16to8table, table16to8, 0x10000);

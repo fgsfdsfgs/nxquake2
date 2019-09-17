@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // models are the only shared resource between a client and server running
 // on the same machine.
 
+#include <limits.h>
 #include "header/local.h"
 
 model_t	*loadmodel;
@@ -209,6 +210,7 @@ Mod_PointInLeaf (vec3_t p, model_t *model)
 	if (!model || !model->nodes)
 	{
 		ri.Sys_Error(ERR_DROP, "%s: bad model", __func__);
+		return NULL;
 	}
 
 	node = model->nodes;
@@ -365,14 +367,11 @@ Mod_LoadVertexes (lump_t *l)
 
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc((count+8)*sizeof(*out));		// extra for skybox
-        /*
-         * PATCH: eliasm
-         *
-         * This patch fixes the problem where the games dumped core
-         * when changing levels.
-         */
-        memset( out, 0, (count + 6) * sizeof( *out ) );
-        /* END OF PATCH */
+	/*
+	 * Fix for the problem where the games dumped core
+	 * when changing levels.
+	 */
+	memset( out, 0, (count + 6) * sizeof( *out ) );
 
 	loadmodel->vertexes = out;
 	loadmodel->numvertexes = count;
@@ -496,15 +495,9 @@ Mod_LoadTexinfo (lump_t *l)
 		}
 		len1 = VectorLength (out->vecs[0]);
 		len2 = VectorLength (out->vecs[1]);
-		len1 = (len1 + len2)/2;
-		if (len1 < 0.32)
-			out->mipadjust = 4;
-		else if (len1 < 0.49)
-			out->mipadjust = 3;
-		else if (len1 < 0.99)
-			out->mipadjust = 2;
-		else
-			out->mipadjust = 1;
+		out->mipadjust = sqrt(len1*len1 + len2*len2);
+		if (out->mipadjust < 0.01)
+			out->mipadjust = 0.01;
 
 		out->flags = LittleLong (in->flags);
 
@@ -512,15 +505,12 @@ Mod_LoadTexinfo (lump_t *l)
 		if (next > 0)
 			out->next = loadmodel->texinfo + next;
 		/*
-		 * PATCH: eliasm
-		 *
-		 * This patch fixes the problem where the game
+		 * Fix for the problem where the game
 		 * domed core when loading a new level.
 		 */
 		else {
 			out->next = NULL;
 		}
-		/* END OF PATCH */
 
 		Com_sprintf (name, sizeof(name), "textures/%s.wal", in->texture);
 		out->image = R_FindImage (name, it_wall);
@@ -556,8 +546,8 @@ CalcSurfaceExtents (msurface_t *s)
 	mtexinfo_t	*tex;
 	int		bmins[2], bmaxs[2];
 
-	mins[0] = mins[1] = 999999;
-	maxs[0] = maxs[1] = -99999;
+	mins[0] = mins[1] = INT_MAX; // Set maximum values for world range
+	maxs[0] = maxs[1] = INT_MIN; // Set minimal values for world range
 
 	tex = s->texinfo;
 
@@ -683,7 +673,6 @@ Mod_LoadFaces (lump_t *l)
 		}
 
 		//==============
-		//PGM
 		// this marks flowing surfaces as turbulent, but with the new
 		// SURF_FLOW flag.
 		if (out->texinfo->flags & SURF_FLOWING)
@@ -696,7 +685,6 @@ Mod_LoadFaces (lump_t *l)
 			}
 			continue;
 		}
-		//PGM
 		//==============
 	}
 }
@@ -995,7 +983,7 @@ Mod_LoadBrushModel(model_t *mod, void *buffer, int modfilelen)
 	int hunkSize = 0;
 	hunkSize += calcLumpHunkSize(&header->lumps[LUMP_VERTEXES], sizeof(dvertex_t), sizeof(mvertex_t), 8);
 	hunkSize += calcLumpHunkSize(&header->lumps[LUMP_EDGES], sizeof(dedge_t), sizeof(medge_t), 13);
-	float surfEdgeCount = header->lumps[LUMP_SURFEDGES].filelen/sizeof(int);
+	float surfEdgeCount = (float)header->lumps[LUMP_SURFEDGES].filelen / sizeof(int);
 	if(surfEdgeCount < MAX_MAP_SURFEDGES) // else it errors out later anyway
 		hunkSize += calcLumpHunkSize(&header->lumps[LUMP_SURFEDGES], sizeof(int), sizeof(int), 24);
 
@@ -1233,6 +1221,8 @@ SPRITE MODELS
 /*
 =================
 Mod_LoadSpriteModel
+
+support for .sp2 sprites
 =================
 */
 static void
@@ -1339,9 +1329,7 @@ RE_RegisterModel (char *name)
 			pheader = (dmdl_t *)mod->extradata;
 			for (i=0 ; i<pheader->num_skins ; i++)
 				mod->skins[i] = R_FindImage ((char *)pheader + pheader->ofs_skins + i*MAX_SKINNAME, it_skin);
-			//PGM
 			mod->numframes = pheader->num_frames;
-			//PGM
 		}
 		else if (mod->type == mod_brush)
 		{

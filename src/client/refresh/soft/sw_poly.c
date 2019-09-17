@@ -18,6 +18,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 #include <assert.h>
+#include <limits.h>
 #include "header/local.h"
 
 #define AFFINE_SPANLET_SIZE      16
@@ -48,7 +49,7 @@ static emitpoint_t	outverts[MAXWORKINGVERTS+3];
 
 static int	s_minindex, s_maxindex;
 
-static void R_DrawPoly(int iswater);
+static void R_DrawPoly(int iswater, espan_t *spans);
 
 /*
 ** R_DrawSpanletOpaque
@@ -589,9 +590,9 @@ R_ClipPolyFace (int nump, clipplane_t *pclipplane)
 /*
 ** R_PolygonDrawSpans
 */
-// PGM - iswater was qboolean. changed to allow passing more flags
+// iswater was qboolean. changed to allow passing more flags
 static void
-R_PolygonDrawSpans(espan_t *pspan, int iswater )
+R_PolygonDrawSpans(espan_t *pspan, int iswater, float d_ziorigin, float d_zistepu, float d_zistepv)
 {
 	int	snext, tnext;
 	float	sdivz, tdivz, zi, z, du, dv, spancountminus1;
@@ -600,13 +601,11 @@ R_PolygonDrawSpans(espan_t *pspan, int iswater )
 
 	s_spanletvars.pbase = cacheblock;
 
-	//PGM
 	if ( iswater & SURF_WARP)
 		r_turb_turb = sintable + ((int)(r_newrefdef.time*SPEED)&(CYCLE-1));
 	else
 		// iswater & SURF_FLOWING
 		r_turb_turb = blanktable;
-	//PGM
 
 	sdivzspanletstepu = d_sdivzstepu * AFFINE_SPANLET_SIZE;
 	tdivzspanletstepu = d_tdivzstepu * AFFINE_SPANLET_SIZE;
@@ -630,6 +629,10 @@ R_PolygonDrawSpans(espan_t *pspan, int iswater )
 
 		if (count > 0)
 		{
+			// transparent spans damage z buffer
+			VID_DamageZBuffer(pspan->u, pspan->v);
+			VID_DamageZBuffer(pspan->u + count, pspan->v);
+
 			// calculate the initial s/z, t/z, 1/z, s, and t and clamp
 			du = (float)pspan->u;
 			dv = (float)pspan->v;
@@ -750,7 +753,7 @@ R_PolygonDrawSpans(espan_t *pspan, int iswater )
 
 		pspan++;
 
-	} while (pspan->count != DS_SPAN_LIST_END);
+	} while (pspan->count != INT_MIN);
 }
 
 /*
@@ -819,6 +822,8 @@ R_PolygonScanLeftEdge (espan_t *s_polygon_spans)
 			i = r_polydesc.nump;
 
 	} while (i != lmaxindex);
+
+	pspan->count = INT_MIN;	// mark the end of the span list
 }
 
 /*
@@ -904,13 +909,13 @@ R_PolygonScanRightEdge(espan_t *s_polygon_spans)
 
 	} while (i != s_maxindex);
 
-	pspan->count = DS_SPAN_LIST_END;	// mark the end of the span list
+	pspan->count = INT_MIN;	// mark the end of the span list
 }
 
 /*
 ** R_ClipAndDrawPoly
 */
-// PGM - isturbulent was qboolean. changed to int to allow passing more flags
+// isturbulent was qboolean. changed to int to allow passing more flags
 void
 R_ClipAndDrawPoly ( float alpha, int isturbulent, qboolean textured )
 {
@@ -1021,7 +1026,7 @@ R_ClipAndDrawPoly ( float alpha, int isturbulent, qboolean textured )
 	r_polydesc.nump = nump;
 	r_polydesc.pverts = outverts;
 
-	R_DrawPoly(isturbulent);
+	R_DrawPoly(isturbulent, vid_polygon_spans);
 }
 
 /*
@@ -1074,14 +1079,12 @@ R_BuildPolygonFromSurface(const entity_t *currententity, const model_t *currentm
 		VectorSubtract( vec3_origin, r_polydesc.vpn, r_polydesc.vpn );
 	}
 
-	// PGM 09/16/98
 	if ( fa->texinfo->flags & (SURF_WARP|SURF_FLOWING) )
 	{
 		r_polydesc.pixels       = fa->texinfo->image->pixels[0];
 		r_polydesc.pixel_width  = fa->texinfo->image->width;
 		r_polydesc.pixel_height = fa->texinfo->image->height;
 	}
-	// PGM 09/16/98
 	else
 	{
 		surfcache_t *scache;
@@ -1114,10 +1117,11 @@ R_BuildPolygonFromSurface(const entity_t *currententity, const model_t *currentm
 ** R_PolygonCalculateGradients
 */
 static void
-R_PolygonCalculateGradients (void)
+R_PolygonCalculateGradients (float *p_ziorigin, float *p_zistepu, float *p_zistepv)
 {
-	vec3_t		p_normal, p_saxis, p_taxis;
-	float		distinv;
+	vec3_t	p_normal, p_saxis, p_taxis;
+	float	distinv;
+	float	d_ziorigin, d_zistepu, d_zistepv;
 
 	TransformVector (r_polydesc.vpn, p_normal);
 	TransformVector (r_polydesc.vright, p_saxis);
@@ -1143,6 +1147,10 @@ R_PolygonCalculateGradients (void)
 	// -1 (-epsilon) so we never wander off the edge of the texture
 	bbextents = (r_polydesc.pixel_width << SHIFT16XYZ) - 1;
 	bbextentt = (r_polydesc.pixel_height << SHIFT16XYZ) - 1;
+
+	*p_zistepu = d_zistepu;
+	*p_zistepv = d_zistepv;
+	*p_ziorigin = d_ziorigin;
 }
 
 /*
@@ -1153,20 +1161,19 @@ R_PolygonCalculateGradients (void)
 **
 ** This should NOT be called externally since it doesn't do clipping!
 */
-// PGM - iswater was qboolean. changed to support passing more flags
+// iswater was qboolean. changed to support passing more flags
 static void
-R_DrawPoly(int iswater)
+R_DrawPoly(int iswater, espan_t *spans)
 {
 	int		i, nump;
 	float		ymin, ymax;
 	emitpoint_t	*pverts;
-	espan_t		*spans;
-	spans = vid_polygon_spans;
+	float	d_ziorigin, d_zistepu, d_zistepv;
 
 	// find the top and bottom vertices, and make sure there's at least one scan to
 	// draw
-	ymin = 999999.9;
-	ymax = -999999.9;
+	ymin = INT_MAX; // Set maximum values for world range
+	ymax = INT_MIN; // Set minimal values for world range
 	pverts = r_polydesc.pverts;
 
 	for (i=0 ; i<r_polydesc.nump ; i++)
@@ -1201,11 +1208,11 @@ R_DrawPoly(int iswater)
 	pverts = r_polydesc.pverts;
 	pverts[nump] = pverts[0];
 
-	R_PolygonCalculateGradients();
-	R_PolygonScanLeftEdge(vid_polygon_spans);
-	R_PolygonScanRightEdge(vid_polygon_spans);
+	R_PolygonCalculateGradients(&d_ziorigin, &d_zistepu, &d_zistepv);
+	R_PolygonScanLeftEdge(spans);
+	R_PolygonScanRightEdge(spans);
 
-	R_PolygonDrawSpans(spans, iswater);
+	R_PolygonDrawSpans(spans, iswater, d_ziorigin, d_zistepu, d_zistepv);
 }
 
 /*
@@ -1225,20 +1232,11 @@ R_DrawAlphaSurfaces(const entity_t *currententity)
 	{
 		R_BuildPolygonFromSurface(currententity, currentmodel, s);
 
-		//=======
-		//PGM
-		//		if (s->texinfo->flags & SURF_TRANS66)
-		//			R_ClipAndDrawPoly( 0.60f, ( s->texinfo->flags & SURF_WARP) != 0, true );
-		//		else
-		//			R_ClipAndDrawPoly( 0.30f, ( s->texinfo->flags & SURF_WARP) != 0, true );
-
-		// PGM - pass down all the texinfo flags, not just SURF_WARP.
+		// pass down all the texinfo flags, not just SURF_WARP.
 		if (s->texinfo->flags & SURF_TRANS66)
 			R_ClipAndDrawPoly( 0.60f, (s->texinfo->flags & (SURF_WARP|SURF_FLOWING)), true );
 		else
 			R_ClipAndDrawPoly( 0.30f, (s->texinfo->flags & (SURF_WARP|SURF_FLOWING)), true );
-		//PGM
-		//=======
 
 		s = s->nextalphasurface;
 	}

@@ -46,7 +46,7 @@
 // These are used to communicate the events collected by
 // IN_Update() called at the beginning of a frame to the
 // actual movement functions called at a later time.
-static int mouse_x, mouse_y;
+static float mouse_x, mouse_y;
 static int back_button_id = -1;
 static float joystick_yaw, joystick_pitch;
 static float joystick_forwardmove, joystick_sidemove;
@@ -56,6 +56,10 @@ static qboolean mlooking;
 // The last time input events were processed.
 // Used throughout the client.
 int sys_frame_time;
+
+// the joystick altselector that turns K_JOYX into K_JOYX_ALT
+// is pressed
+qboolean joy_altselector_pressed = false;
 
 // Console Variables
 cvar_t *vid_fullscreen;
@@ -713,8 +717,8 @@ In_FlushQueue(void)
 void
 IN_Move(usercmd_t *cmd)
 {
-	static int old_mouse_x;
-	static int old_mouse_y;
+	static float old_mouse_x;
+	static float old_mouse_y;
 
 	if (m_filter->value)
 	{
@@ -842,6 +846,18 @@ IN_MLookUp(void)
 {
 	mlooking = false;
 	IN_CenterView();
+}
+
+static void
+IN_JoyAltSelectorDown(void)
+{
+	joy_altselector_pressed = true;
+}
+
+static void
+IN_JoyAltSelectorUp(void)
+{
+	joy_altselector_pressed = false;
 }
 
 /* ------------------------------------------------------------------ */
@@ -1235,6 +1251,9 @@ IN_Init(void)
 
 	Cmd_AddCommand("+mlook", IN_MLookDown);
 	Cmd_AddCommand("-mlook", IN_MLookUp);
+
+	Cmd_AddCommand("+joyaltselector", IN_JoyAltSelectorDown);
+	Cmd_AddCommand("-joyaltselector", IN_JoyAltSelectorUp);
 
 	SDL_StartTextInput();
 

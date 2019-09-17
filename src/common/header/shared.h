@@ -254,13 +254,8 @@ int Q_strlcat(char *dst, const char *src, int size);
 
 /* ============================================= */
 
-/* Unicode wrappers around fopen(). */
-
-#ifdef _WIN32
+/* Unicode wrappers that also make sure it's a regular file around fopen(). */
 FILE *Q_fopen(const char *file, const char *mode);
-#else
-#define Q_fopen(file, mode) fopen(file, mode)
-#endif
 
 /* ============================================= */
 
@@ -359,6 +354,9 @@ typedef struct cvar_s
 	qboolean modified; /* set each time the cvar is changed */
 	float value;
 	struct cvar_s *next;
+
+	/* Added by YQ2. Must be at the end to preserve ABI. */
+	char *default_string;
 } cvar_t;
 
 #endif /* CVAR */

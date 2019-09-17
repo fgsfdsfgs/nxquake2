@@ -46,11 +46,6 @@ typedef struct
 	vec3_t		position;
 } mvertex_t;
 
-#define	SIDE_FRONT	0
-#define	SIDE_BACK	1
-#define	SIDE_ON		2
-
-
 // plane_t structure
 typedef struct mplane_s
 {
@@ -68,7 +63,7 @@ typedef struct mplane_s
 #define SURF_DRAWBACKGROUND	0x40
 #define SURF_DRAWSKYBOX		0x80	// sky box
 
-#define SURF_FLOW		0x100	//PGM
+#define SURF_FLOW		0x100
 
 typedef struct
 {
@@ -118,7 +113,7 @@ typedef struct msurface_s
 #define	CONTENTS_NODE	-1
 typedef struct mnode_s
 {
-// common with leaf
+	// common with leaf
 	int		contents;	// CONTENTS_NODE, to differentiate from leafs
 	int		visframe;	// node needs to be traversed if current
 
@@ -231,9 +226,6 @@ typedef struct model_s
 //============================================================================
 
 void	Mod_Init(void);
-void	Mod_ClearAll(void);
-void	*Mod_Extradata(model_t *mod);	// handles caching
-void	Mod_TouchModel(char *name);
 
 mleaf_t *Mod_PointInLeaf(float *p, model_t *model);
 byte	*Mod_ClusterPVS(int cluster, model_t *model);
