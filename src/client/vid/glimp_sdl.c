@@ -33,6 +33,10 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
 
+#ifdef __SWITCH__
+#include <switch.h> // for appletOperationMode
+#endif
+
 int glimp_refreshRate = -1;
 
 static cvar_t *vid_displayrefreshrate;
@@ -704,6 +708,21 @@ GLimp_GetRefreshRate(void)
 qboolean
 GLimp_GetDesktopMode(int *pwidth, int *pheight)
 {
+#ifdef __SWITCH__
+	// SDL_GetDesktopDisplayMode will always return 1920x1080, so just
+	// check whether we're docked or not
+	if (appletGetOperationMode() == AppletOperationMode_Docked)
+	{
+		*pwidth = 1920;
+		*pheight = 1080;
+	}
+	else
+	{
+		*pwidth = 1280;
+		*pheight = 720;
+	}
+	return true;
+#else
 	// Declare display mode structure to be filled in.
 	SDL_DisplayMode mode;
 
@@ -732,6 +751,7 @@ GLimp_GetDesktopMode(int *pwidth, int *pheight)
 	*pwidth = mode.w;
 	*pheight = mode.h;
 	return true;
+#endif
 }
 
 const char**
