@@ -99,6 +99,7 @@ int sys_frame_time;
 // is pressed
 qboolean joy_altselector_pressed = false;
 
+
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 static float joystick_yaw, joystick_pitch;
 static float joystick_forwardmove, joystick_sidemove;
@@ -108,10 +109,6 @@ static char last_hat = SDL_HAT_CENTERED;
 static qboolean left_trigger = false;
 static qboolean right_trigger = false;
 qboolean show_haptic = false;
-
-// the joystick altselector that turns K_JOYX into K_JOYX_ALT
-// is pressed
-qboolean joy_altselector_pressed = false;
 
 /* Haptic feedback types */
 enum QHARPICTYPES {
