@@ -54,16 +54,16 @@ typedef unsigned char byte;
 #endif
 
 // stuff to align variables/arrays and for noreturn
-#if __STDC_VERSION__ >= 201112L // C11 or newer
-	#define YQ2_ALIGNAS_SIZE(SIZE)  _Alignas(SIZE)
-	#define YQ2_ALIGNAS_TYPE(TYPE)  _Alignas(TYPE)
-	// must be used as prefix (YQ2_ATTR_NORETURN void bla();)!
-	#define YQ2_ATTR_NORETURN       _Noreturn
-#elif defined(__GNUC__) // GCC and clang should support this attribute
+#if defined(__GNUC__) || defined(__SWITCH__) // GCC and clang should support this attribute
 	#define YQ2_ALIGNAS_SIZE(SIZE)  __attribute__(( __aligned__(SIZE) ))
 	#define YQ2_ALIGNAS_TYPE(TYPE)  __attribute__(( __aligned__(__alignof__(TYPE)) ))
 	// must be used as prefix (YQ2_ATTR_NORETURN void bla();)!
 	#define YQ2_ATTR_NORETURN       __attribute__ ((noreturn))
+#elif __STDC_VERSION__ >= 201112L // C11 or newer
+	#define YQ2_ALIGNAS_SIZE(SIZE)  _Alignas(SIZE)
+	#define YQ2_ALIGNAS_TYPE(TYPE)  _Alignas(TYPE)
+	// must be used as prefix (YQ2_ATTR_NORETURN void bla();)!
+	#define YQ2_ATTR_NORETURN       _Noreturn
 #elif defined(_MSC_VER)
 	#define YQ2_ALIGNAS_SIZE(SIZE)  __declspec( align(SIZE) )
 	#define YQ2_ALIGNAS_TYPE(TYPE)  __declspec( align( __alignof(TYPE) ) )
