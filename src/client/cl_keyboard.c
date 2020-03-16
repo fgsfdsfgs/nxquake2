@@ -238,6 +238,7 @@ keyname_t keynames[] = {
 	{"KP_INS", K_KP_INS},
 	{"KP_DEL", K_KP_DEL},
 	{"KP_SLASH", K_KP_SLASH},
+	{"KP_STAR", K_KP_STAR},
 	{"KP_MINUS", K_KP_MINUS},
 	{"KP_PLUS", K_KP_PLUS},
 
@@ -1024,9 +1025,14 @@ Key_Init(void)
 	consolekeys[K_KP_INS] = true;
 	consolekeys[K_KP_DEL] = true;
 	consolekeys[K_KP_SLASH] = true;
+	consolekeys[K_KP_STAR] = true;
 	consolekeys[K_KP_PLUS] = true;
 	consolekeys[K_KP_MINUS] = true;
 	consolekeys[K_KP_5] = true;
+	consolekeys[K_MWHEELUP] = true;
+	consolekeys[K_MWHEELDOWN] = true;
+	consolekeys[K_MOUSE4] = true;
+	consolekeys[K_MOUSE5] = true;
 
 #ifdef __SWITCH__
 	for (i = 0; i < 16; i++)
@@ -1178,7 +1184,8 @@ Key_Event(int key, qboolean down, qboolean special)
 	}
 
 	/* Key is unbound */
-	if ((key >= K_MOUSE1 && key != K_JOY_BACK) && !keybindings[key] && (cls.key_dest != key_console))
+	if ((key >= K_MOUSE1 && key != K_JOY_BACK) && !keybindings[key] && (cls.key_dest != key_console) &&
+		(cls.state == ca_active))
 	{
 		Com_Printf("%s is unbound, hit F4 to set.\n", Key_KeynumToString(key));
 	}

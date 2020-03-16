@@ -1,18 +1,17 @@
 # Yamagi Quake II
 
-This is the Yamagi Quake II Client, an enhanced version of id Software's Quake
+Yamagi Quake II is an enhanced client for id Software's Quake
 II with focus on offline and coop gameplay. Both the gameplay and the graphics
-are unchanged, but many bugs if the last official release were fixed and some
+are unchanged, but many bugs in the last official release were fixed and some
 nice to have features like widescreen support and a modern OpenGL 3.2 renderer
-were added. Unlike most other Quake II source ports Yamagi Quake II is fully 64
-bit clean. It works perfectly on modern processors and operating systems. Yamagi
+were added. Unlike most other Quake II source ports Yamagi Quake II is fully 64-bit
+clean. It works perfectly on modern processors and operating systems. Yamagi
 Quake II runs on nearly all common platforms; including FreeBSD, Linux, OpenBSD,
-Windows and OS X (experimental).
+Windows and macOS (experimental).
 
-This code is build upon Icculus Quake II, which itself is based on Quake II
+This code is built upon Icculus Quake II, which itself is based on Quake II
 3.21. Yamagi Quake II is released under the terms of the GPL version 2. See the
 LICENSE file for further information.
-
 
 # Switch version
 
@@ -24,6 +23,7 @@ You will need:
 * [my fork of OpenAL-Soft](https://github.com/fgsfdsfgs/openal-soft).
 
 You can install most of the libraries with `(dkp-)pacman`.
+> pacman -S switch-sdl2 switch-zlib switch-mesa switch-libdrm_nouveau
 
 Run `make -f Makefile.nx` in this directory to build `nxquake2.nro`.
 
@@ -37,14 +37,10 @@ Mission Packs and mods are not supported yet.
 
 If the game crashes, check `/switch/nxquake2/crash.log` for details.
 
-
-# Other platforms
-
 ## Documentation
 
-Before asking any questions read through the documentation! The current
+Before asking any question, read through the documentation! The current
 version can be found here: [doc/01_index.md](doc/01_index.md)
-
 
 ## Releases
 

@@ -63,6 +63,13 @@ it's `+set busywait 0` (setting the `busywait` cvar) and `-portable`
   If *cl_async* is set to `0` *vid_maxfps* is the same as *cl_maxfps*,
   use *cl_maxfps* to set the framerate.
 
+* **cl_loadpaused**: If set to `1` (the default) the client is put into
+  pause mode during single player savegame load. This prevents monsters
+  and the environment from hurting the player while the client is still
+  connecting. If set to `2` the client stays in pause mode after
+  loading. If set to `0` pause mode is never entered, this is the
+  Vanilla Quake II behaviour.
+
 * **cl_showfps**: Shows the framecounter. Set to `2` for more and to
   `3` for even more informations.
 
@@ -253,3 +260,24 @@ it's `+set busywait 0` (setting the `busywait` cvar) and `-portable`
 
 * **gl3_particle_square**: If set to `1`, particles are rendered as
   squares, like in the old software renderer or Quake 1. Default is `0`.
+
+
+## cvar operations
+
+cvar operations are special commands that allow the programmatic
+manipulation of cvar values. They can be used for scripting and the
+like.
+
+* **dec <cvar> [val]**: Decrements the given cvar by `1` or the optional
+  value `val`.
+
+* **inc <cvar> [val]**: Increments the given cvar by `1` or the optional
+  value `val`.
+
+* **reset <cvar>**: Reset the given cvar to it's default value.
+
+* **resetall**: Reset all known cvar to their default values.
+
+* **toggle <cvar> [val0] [val1]**: Toggle the given cvar between `0` and
+  `1`. If the optional arguments `val0` and `val1` are given the given
+  cvar is toggled between them.
