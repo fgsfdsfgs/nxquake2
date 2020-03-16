@@ -1136,6 +1136,12 @@ Key_Event(int key, qboolean down, qboolean special)
 	/* Track if key is down */
 	keydown[key] = down;
 
+	/* Evil hack against spurious cinematic aborts. */
+	if (down && (key != K_ESCAPE) && !keydown[K_SHIFT])
+	{
+		abort_cinematic = cls.realtime;
+	}
+
 	/* Ignore most autorepeats */
 	if (down)
 	{
@@ -1326,12 +1332,8 @@ Key_Event(int key, qboolean down, qboolean special)
 		return;
 	}
 
-	/* All input subsystems handled after this
-	   point only care for key down events. */
-	if (!down)
-	{
-		return;
-	}
+	/* All input subsystems handled after this point only
+	   care for key down events (=> if(!down) returns above). */
 
 	/* Everything that's not a special char
 	   is processed by Char_Event(). */

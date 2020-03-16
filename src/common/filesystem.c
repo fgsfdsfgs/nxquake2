@@ -103,6 +103,7 @@ fsPackTypes_t fs_packtypes[] = {
 	{"pak", PAK},
 	{"pk2", PK3},
 	{"pk3", PK3},
+	{"pkz", PK3},
 	{"zip", PK3}
 };
 
@@ -480,11 +481,6 @@ FS_FOpenFile(const char *name, fileHandle_t *f, qboolean gamedir_only)
 				Q_strlwr(lwrName);
 				Com_sprintf(path, sizeof(path), "%s/%s", search->path, lwrName);
 				handle->file = Q_fopen(path, "rb");
-			}
-
-			if (!handle->file)
-			{
-				continue;
 			}
 
 			if (handle->file)
@@ -1005,6 +1001,7 @@ FS_ListFiles(char *findname, int *numfiles,
 
 	/* Allocate the list. */
 	list = calloc(nfiles, sizeof(char *));
+	YQ2_COM_CHECK_OOM(list, "calloc()", (size_t)nfiles*sizeof(char*))
 
 	/* Fill the list. */
 	s = Sys_FindFirst(findname, musthave, canthave);
@@ -1107,6 +1104,7 @@ FS_ListFiles2(char *findname, int *numfiles,
 
 	nfiles = 0;
 	list = malloc(sizeof(char *));
+	YQ2_COM_CHECK_OOM(list, "malloc()", sizeof(char*))
 
 	for (search = fs_searchPaths; search != NULL; search = search->next)
 	{
@@ -1133,6 +1131,7 @@ FS_ListFiles2(char *findname, int *numfiles,
 
 			nfiles += j;
 			list = realloc(list, nfiles * sizeof(char *));
+			YQ2_COM_CHECK_OOM(list, "realloc()", (size_t)nfiles*sizeof(char*))
 
 			for (i = 0, j = nfiles - j; i < search->pack->numFiles; i++)
 			{
@@ -1157,6 +1156,7 @@ FS_ListFiles2(char *findname, int *numfiles,
 			tmpnfiles--;
 			nfiles += tmpnfiles;
 			list = realloc(list, nfiles * sizeof(char *));
+			YQ2_COM_CHECK_OOM(list, "2nd realloc()", (size_t)nfiles*sizeof(char*))
 
 			for (i = 0, j = nfiles - tmpnfiles; i < tmpnfiles; i++, j++)
 			{
@@ -1193,6 +1193,7 @@ FS_ListFiles2(char *findname, int *numfiles,
 	{
 		nfiles -= tmpnfiles;
 		tmplist = malloc(nfiles * sizeof(char *));
+		YQ2_COM_CHECK_OOM(tmplist, "malloc()", (size_t)nfiles*sizeof(char*))
 
 		for (i = 0, j = 0; i < nfiles + tmpnfiles; i++)
 		{
@@ -1211,6 +1212,7 @@ FS_ListFiles2(char *findname, int *numfiles,
 	{
 		nfiles++;
 		list = realloc(list, nfiles * sizeof(char *));
+		YQ2_COM_CHECK_OOM(list, "3rd realloc()", (size_t)nfiles*sizeof(char*))
 		list[nfiles - 1] = NULL;
 	}
 
@@ -1624,7 +1626,7 @@ FS_BuildGameSpecificSearchPath(char *dir)
 	}
 
 	// The game was reset to baseq2. Nothing to do here.
-	if ((Q_stricmp(dir, BASEDIRNAME) == 0) || (*dir == 0)) {
+	if (Q_stricmp(dir, BASEDIRNAME) == 0) {
 		Cvar_FullSet("gamedir", "", CVAR_SERVERINFO | CVAR_NOSET);
 		Cvar_FullSet("game", "", CVAR_LATCH | CVAR_SERVERINFO);
 

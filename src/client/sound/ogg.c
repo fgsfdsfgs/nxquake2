@@ -97,7 +97,7 @@ static int getMappedGOGtrack(int track, enum GameType gameType)
 		case  2: return 9;  // baseq2 9
 		case  3: return 13; // rogue  3
 		case  4: return 14; // rogue  4
-		case  5: return 7;  // baseq2 6
+		case  5: return 7;  // baseq2 7
 		case  6: return 16; // rogue  6
 		case  7: return 2;  // baseq2 2
 		case  8: return 15; // rogue  5
@@ -130,7 +130,7 @@ OGG_InitTrackList(void)
 	char gameMusicDir[MAX_QPATH] = {0}; // e.g. "xatrix/music"
 	cvar_t* gameCvar = Cvar_Get("game", "", CVAR_LATCH | CVAR_SERVERINFO);
 
-	if (gameCvar == NULL || gameCvar->string[0] == '\0' || strcmp(BASEDIRNAME, gameCvar->string) == 0)
+	if (gameCvar->string[0] == '\0' || strcmp(BASEDIRNAME, gameCvar->string) == 0)
 	{
 		// baseq2 => only 2 dirs in searchPath
 		potMusicDirs[0] = BASEDIRNAME "/music/"; // baseq2/music/
@@ -324,6 +324,11 @@ OGG_Stream(void)
 void
 OGG_PlayTrack(int trackNo)
 {
+	if (sound_started == SS_NOT)
+	{
+		return; // sound is not initialized
+	}
+
 	// Track 0 means "stop music".
 	if(trackNo == 0)
 	{

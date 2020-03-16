@@ -16,8 +16,12 @@ have been renamed. The prefixes are:
 * `sw_`: Software renderer.
 * `vid_`: Video backend.
 
-All cvars may be given at command line trough `+set cvar value` or typed
+All cvars may be given at command line through `+set cvar value` or typed
 into the console. The console can be opended with *Left Shift + Esc*.
+
+Keep in mind that some cvars need quotation marks around the arguments.
+When giving such cvars at the command line the argument string must be
+surrounded by ticks. For example `+set sv_maplist '"q2dm1 q2dm2"'`.
 
 
 ## Command line arguments
@@ -79,6 +83,19 @@ it's `+set busywait 0` (setting the `busywait` cvar) and `-portable`
   during gameplay and released otherwise (in menu, videos, console or if
   game is paused).
 
+* **coop_baseq2 (Ground Zero only)**: In Ground Zero, entity spawnflags
+  (which difficulty modes / game modes level entities spawn in) are
+  interpeted a bit differently. In original Quake 2, if an entity is
+  set to not spawn on any difficulty, it is treated as deathmatch-only,
+  however, in Ground Zero this same condition is treated as coop-only.
+  This causes maps made for original Quake 2, including the entire
+  Quake 2 campaign, to not work correctly when played in Ground Zero
+  in co-op mode. This cvar, when set to 1, restores the original
+  interpretation and enables you to play original Quake 2 maps in
+  Ground Zero co-op. Though keep in mind that Ground Zero maps will
+  not work correctly when this cvar is enabled so remember to
+  disable it again before playing Ground Zero maps in co-op. By
+  default this cvar is disabled (set to 0).
 
 ## Audio
 
@@ -225,6 +242,9 @@ it's `+set busywait 0` (setting the `busywait` cvar) and `-portable`
   values are `0` (no overbright bits), `1` (more correct lighting for
   water), `2` (scale by factor 2) and `3` (scale by factor 3). Applied
   in realtime, does not need `vid_restart`.
+
+* **gl1_particle_square**: If set to `1` particles are rendered as
+  squares.
 
 * **gl1_stencilshadow**: If `gl_shadows` is set to `1`, this makes them
   look a bit better (no flickering) by using the stencil buffer.

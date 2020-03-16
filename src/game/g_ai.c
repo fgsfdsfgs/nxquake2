@@ -445,7 +445,7 @@ FoundTarget(edict_t *self)
 		level.sight_entity->light_level = 128;
 	}
 
-	self->show_hostile = (int)level.time + 1; /* wake up other monsters */
+	self->show_hostile = level.time + 1; /* wake up other monsters */
 
 	VectorCopy(self->enemy->s.origin, self->monsterinfo.last_sighting);
 	self->monsterinfo.trail_time = level.time;
@@ -624,7 +624,7 @@ FindTarget(edict_t *self)
 
 		if (r == RANGE_NEAR)
 		{
-			if ((client->show_hostile < (int)level.time) && !infront(self, client))
+			if ((client->show_hostile < level.time) && !infront(self, client))
 			{
 				return false;
 			}
@@ -769,7 +769,7 @@ M_CheckAttack(edict_t *self)
 	if (enemy_range == RANGE_MELEE)
 	{
 		/* don't always melee in easy mode */
-		if ((skill->value == 0) && (randk() & 3))
+		if ((skill->value == SKILL_EASY) && (randk() & 3))
 		{
 			return false;
 		}
@@ -806,10 +806,6 @@ M_CheckAttack(edict_t *self)
 	{
 		chance = 0.4;
 	}
-	else if (enemy_range == RANGE_MELEE)
-	{
-		chance = 0.2;
-	}
 	else if (enemy_range == RANGE_NEAR)
 	{
 		chance = 0.1;
@@ -823,11 +819,11 @@ M_CheckAttack(edict_t *self)
 		return false;
 	}
 
-	if (skill->value == 0)
+	if (skill->value == SKILL_EASY)
 	{
 		chance *= 0.5;
 	}
-	else if (skill->value >= 2)
+	else if (skill->value >= SKILL_HARD)
 	{
 		chance *= 2;
 	}
@@ -948,7 +944,7 @@ ai_checkattack(edict_t *self)
 	vec3_t temp;
 	qboolean hesDeadJim;
 
-	if (!self || !self->enemy || !self->enemy->inuse)
+	if (!self)
 	{
 		enemy_vis = false;
 
@@ -990,7 +986,7 @@ ai_checkattack(edict_t *self)
 			}
 			else
 			{
-				self->show_hostile = (int)level.time + 1;
+				self->show_hostile = level.time + 1;
 				return false;
 			}
 		}
@@ -1063,7 +1059,7 @@ ai_checkattack(edict_t *self)
 	}
 
 	/* wake up other monsters */
-	self->show_hostile = (int)level.time + 1;
+	self->show_hostile = level.time + 1;
 
 	/* check knowledge of enemy */
 	enemy_vis = visible(self, self->enemy);
@@ -1319,8 +1315,5 @@ ai_run(edict_t *self, float dist)
 
 	G_FreeEdict(tempgoal);
 
-	if (self)
-	{
-		self->goalentity = save;
-	}
+	self->goalentity = save;
 }

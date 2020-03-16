@@ -32,7 +32,7 @@
 #include "shared.h"
 #include "crc.h"
 
-#define YQ2VERSION "7.42pre"
+#define YQ2VERSION "7.44pre"
 #define BASEDIRNAME "baseq2"
 
 #ifndef YQ2OSTYPE
@@ -714,8 +714,23 @@ void Com_Printf(char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 void Com_DPrintf(char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 void Com_VPrintf(int print_level, const char *fmt, va_list argptr); /* print_level is PRINT_ALL or PRINT_DEVELOPER */
 void Com_MDPrintf(char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
-void Com_Error(int code, char *fmt, ...) __attribute__ ((format (printf, 2, 3)));
-void Com_Quit(void);
+YQ2_ATTR_NORETURN void Com_Error(int code, char *fmt, ...) __attribute__ ((format (printf, 2, 3)));
+YQ2_ATTR_NORETURN void Com_Quit(void);
+
+/* Ugly hack: Apprently (our?) MinGW-gcc under Windows
+   doesn't support %zd and requires %Id. */
+#ifdef WIN32
+#define YQ2_COM_PRIdS "%Id"
+#else
+#define YQ2_COM_PRIdS "%zd"
+#endif
+
+// terminate yq2 (with Com_Error()) if VAR is NULL (after malloc() or similar)
+// and print message about it
+#define YQ2_COM_CHECK_OOM(VAR, ALLOC_FN_NAME, ALLOC_SIZE) \
+	if(VAR == NULL) { \
+		Com_Error(ERR_FATAL, "%s for " YQ2_COM_PRIdS " bytes failed in %s() (%s == NULL)! Out of Memory?!\n", \
+		                     ALLOC_FN_NAME, (size_t)ALLOC_SIZE, __func__, #VAR); }
 
 int Com_ServerState(void);              /* this should have just been a cvar... */
 void Com_SetServerState(int state);
@@ -735,8 +750,11 @@ extern cvar_t *sv_entfile;
 /* Hack for portable client */
 extern qboolean is_portable;
 
-/* Hack fo external datadir */
+/* Hack for external datadir */
 extern char datadir[MAX_OSPATH];
+
+/* Hack for external datadir */
+extern char cfgdir[MAX_OSPATH];
 
 /* Hack for working 'game' cmd */
 extern char userGivenGame[MAX_QPATH];
@@ -786,8 +804,8 @@ void SV_Frame(int msec);
 // system.c
 char *Sys_ConsoleInput(void);
 void Sys_ConsoleOutput(char *string);
-void Sys_Error(char *error, ...);
-void Sys_Quit(void);
+YQ2_ATTR_NORETURN void Sys_Error(char *error, ...);
+YQ2_ATTR_NORETURN void Sys_Quit(void);
 void Sys_Init(void);
 char *Sys_GetHomeDir(void);
 void Sys_Remove(const char *path);

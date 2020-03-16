@@ -39,7 +39,7 @@ If the game crashes, check `/switch/nxquake2/crash.log` for details.
 ## Documentation
 
 Before asking any question, read through the documentation! The current
-version can be found here: [doc/01_index.md](doc/01_index.md)
+version can be found here: [doc/010_index.md](doc/010_index.md)
 
 ## Releases
 

@@ -199,6 +199,8 @@ static qboolean checkForHelp(int argc, char **argv)
 				printf("Yamagi Quake II v%s\n", YQ2VERSION);
 				printf("Most interesting commandline arguments:\n");
 				printf("-h or --help: Show this help\n");
+				printf("-cfgdir <path>\n");
+				printf("  set the name of your config directory\n");
 				printf("-datadir <path>\n");
 				printf("  set path to your Quake2 game data (the directory baseq2/ is in)\n");
 				printf("-portable\n");
@@ -224,9 +226,9 @@ static qboolean checkForHelp(int argc, char **argv)
 				printf("  width/height of your custom resolution\n");
 				printf("+set vid_renderer <renderer>\n");
 				printf("  Selects the render backend. Currently available:\n");
-				printf("    'gl1'  (old OpenGL 1.x renderer),\n");
-				printf("    'gl3'  (the shiny new OpenGL 3.2 renderer),\n");
-				printf("    'soft' (the experimental software renderer)\n");
+				printf("    'gl1'  (the OpenGL 1.x renderer),\n");
+				printf("    'gl3'  (the OpenGL 3.2 renderer),\n");
+				printf("    'soft' (the software renderer)\n");
 #endif // DEDICATED_ONLY
 				printf("\nSee https://github.com/yquake2/yquake2/blob/master/doc/04_cvarlist.md\nfor some more cvars\n");
 
@@ -748,11 +750,8 @@ Qcommon_Frame(int usec)
 	if (packetframe) {
 		SV_Frame(servertimedelta);
 		servertimedelta = 0;
-	}
 
-
-	// Reset deltas if necessary.
-	if (packetframe) {
+		// Reset deltas if necessary.
 		packetdelta = 0;
 	}
 }

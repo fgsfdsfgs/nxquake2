@@ -25,12 +25,15 @@
  * =======================================================================
  */
 
+#include <limits.h>
+
 #include "header/client.h"
 #include "input/header/input.h"
 
 extern cvar_t *vid_renderer;
 
 cvar_t *cin_force43;
+int abort_cinematic;
 
 typedef struct
 {
@@ -321,8 +324,7 @@ Huff1Decompress(cblock_t in)
 	int *hnodes, *hnodesbase;
 
 	/* get decompressed count */
-	count = in.data[0] +
-			(in.data[1] << 8) + (in.data[2] << 16) + (in.data[3] << 24);
+	count = in.data[0] + (in.data[1] << 8) + (in.data[2] << 16) + (in.data[3] << 24);
 	input = in.data + 4;
 	out_p = out.data = Z_Malloc(count);
 
@@ -373,7 +375,11 @@ SCR_ReadNextFrame(void)
 {
 	int r;
 	int command;
-	byte samples[22050 / 14 * 4];
+
+	// the samples array is used as bytes or shorts, depending on bitrate (cin.s_width)
+	// so we need to make sure to align it correctly
+	YQ2_ALIGNAS_TYPE(short) byte samples[22050 / 14 * 4];
+
 	byte compressed[0x20000];
 	int size;
 	byte *pic;
@@ -413,7 +419,7 @@ SCR_ReadNextFrame(void)
 	FS_Read(&size, 4, cl.cinematic_file);
 	size = LittleLong(size);
 
-	if (((unsigned long)size > sizeof(compressed)) || (size < 1))
+	if (((size_t)size > sizeof(compressed)) || (size < 1))
 	{
 		Com_Error(ERR_DROP, "Bad compressed frame size");
 	}
@@ -628,6 +634,7 @@ SCR_PlayCinematic(char *arg)
 	char name[MAX_OSPATH], *dot;
 
 	In_FlushQueue();
+	abort_cinematic = INT_MAX;
 
 	/* make sure background music is not playing */
 	OGG_Stop();

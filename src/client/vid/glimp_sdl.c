@@ -82,7 +82,7 @@ ClearDisplayIndices(void)
 static qboolean
 CreateSDLWindow(int flags, int w, int h)
 {
-	if (SDL_WINDOWPOS_ISUNDEFINED(last_position_x) || SDL_WINDOWPOS_ISUNDEFINED(last_position_y))
+	if (SDL_WINDOWPOS_ISUNDEFINED(last_position_x) || SDL_WINDOWPOS_ISUNDEFINED(last_position_y) || last_position_x < 0 ||last_position_y < 24)
 	{
 		last_position_x = last_position_y = SDL_WINDOWPOS_UNDEFINED_DISPLAY((int)vid_displayindex->value);
 	}
@@ -112,7 +112,9 @@ CreateSDLWindow(int flags, int w, int h)
 			return false;
 		}
 
-		if ((flags & SDL_WINDOW_FULLSCREEN) && ((real_mode.w != w) || (real_mode.h != h)))
+		/* SDL_WINDOW_FULLSCREEN_DESKTOP implies SDL_WINDOW_FULLSCREEN! */
+		if (((flags & (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP)) == SDL_WINDOW_FULLSCREEN)
+				&& ((real_mode.w != w) || (real_mode.h != h)))
 		{
 
 			Com_Printf("Current display mode isn't requested display mode\n");
@@ -161,9 +163,11 @@ CreateSDLWindow(int flags, int w, int h)
 			}
 		}
 
-        /* Normally SDL stays at desktop refresh rate or chooses
-		   something sane. Some player may want to override that. */
-		if (flags & SDL_WINDOW_FULLSCREEN)
+		/* Normally SDL stays at desktop refresh rate or chooses something
+		   sane. Some player may want to override that.
+
+		   Reminder: SDL_WINDOW_FULLSCREEN_DESKTOP implies SDL_WINDOW_FULLSCREEN! */
+		if ((flags & (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP)) == SDL_WINDOW_FULLSCREEN)
 		{
 			if (vid_rate->value > 0)
 			{
@@ -254,6 +258,8 @@ InitDisplayIndices()
 	{
 		/* There are a maximum of 10 digits in 32 bit int + 1 for the NULL terminator. */
 		displayindices[ i ] = malloc(11 * sizeof( char ));
+		YQ2_COM_CHECK_OOM(displayindices[i], "malloc()", 11 * sizeof( char ))
+
 		snprintf( displayindices[ i ], 11, "%d", i );
 	}
 
@@ -267,10 +273,11 @@ InitDisplayIndices()
 static void
 PrintDisplayModes(void)
 {
-	int curdisplay = SDL_GetWindowDisplayIndex(window);
+	int curdisplay = window ? SDL_GetWindowDisplayIndex(window) : 0;
 
 	// On X11 (at least for me)
 	// curdisplay is always -1.
+	// DG: probably because window was NULL?
 	if (curdisplay < 0) {
 		curdisplay = 0;
 	}

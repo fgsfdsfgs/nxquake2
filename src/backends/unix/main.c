@@ -25,7 +25,9 @@
  * =======================================================================
  */
 
+#include <errno.h>
 #include <fcntl.h>
+#include <libgen.h>
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -69,7 +71,11 @@ main(int argc, char **argv)
 						return 1;
 					}
 
-					realpath(argv[i + 1], datadir);
+					if(realpath(argv[i + 1], datadir) == NULL)
+					{
+						printf("realpath(datadir) failed: %s\n", strerror(errno));
+						datadir[0] = '\0';
+					}
 				}
 				else
 				{
@@ -82,6 +88,22 @@ main(int argc, char **argv)
 				printf("-datadir needs an argument\n");
 				return 1;
 			}
+		}
+
+		// Inject a custom config dir.
+		if (strcmp(argv[i], "-cfgdir") == 0)
+		{
+			// We need an argument.
+			if (i != (argc - 1))
+			{
+				Q_strlcpy(cfgdir, argv[i + 1], sizeof(cfgdir));
+			}
+			else
+			{
+				printf("-cfgdir needs an argument\n");
+				return 1;
+			}
+
 		}
 	}
 

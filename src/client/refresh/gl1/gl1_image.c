@@ -216,16 +216,21 @@ R_TextureMode(char *string)
 		ri.Cvar_SetValue("gl_anisotropic", 0.0);
 	}
 
+	const char* nolerplist = gl_nolerp_list->string;
+
 	/* change all the existing mipmap texture objects */
 	for (i = 0, glt = gltextures; i < numgltextures; i++, glt++)
 	{
-		if ((glt->type != it_pic) && (glt->type != it_sky))
+		if (nolerplist != NULL && strstr(nolerplist, glt->name) != NULL)
 		{
-			R_Bind(glt->texnum);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-					gl_filter_min);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-					gl_filter_max);
+			continue; /* those (by default: font and crosshairs) always only use GL_NEAREST */
+		}
+
+		R_Bind(glt->texnum);
+		if ((glt->type != it_pic) && (glt->type != it_sky)) /* mipmapped texture */
+		{
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
 
 			/* Set anisotropic filter if supported and enabled */
 			if (gl_config.anisotropic && gl_anisotropic->value)
@@ -233,6 +238,13 @@ R_TextureMode(char *string)
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
 						gl_anisotropic->value);
 			}
+		}
+		else /* texture has no mipmaps */
+		{
+			// we can't use gl_filter_min which might be GL_*_MIPMAP_*
+			// also, there's no anisotropic filtering for textures w/o mipmaps
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_max);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
 		}
 	}
 }
@@ -342,21 +354,17 @@ R_FloodFillSkin(byte *skin, int skinwidth, int skinheight)
 	byte fillcolor = *skin; /* assume this is the pixel to fill */
 	floodfill_t fifo[FLOODFILL_FIFO_SIZE];
 	int inpt = 0, outpt = 0;
-	int filledcolor = -1;
+	int filledcolor = 0;
 	int i;
 
-	if (filledcolor == -1)
+	// NOTE: there was a if(filledcolor == -1) which didn't make sense b/c filledcolor used to be initialized to -1
+	/* attempt to find opaque black */
+	for (i = 0; i < 256; ++i)
 	{
-		filledcolor = 0;
-
-		/* attempt to find opaque black */
-		for (i = 0; i < 256; ++i)
+		if (LittleLong(d_8to24table[i]) == (255 << 0)) /* alpha 1.0 */
 		{
-			if (LittleLong(d_8to24table[i]) == (255 << 0)) /* alpha 1.0 */
-			{
-				filledcolor = i;
-				break;
-			}
+			filledcolor = i;
+			break;
 		}
 	}
 
@@ -398,53 +406,6 @@ R_FloodFillSkin(byte *skin, int skinwidth, int skinheight)
 		}
 
 		skin[x + skinwidth * y] = fdc;
-	}
-}
-
-void
-R_ResampleTexture(unsigned *in, int inwidth, int inheight,
-		unsigned *out, int outwidth, int outheight)
-{
-	int i, j;
-	unsigned *inrow, *inrow2;
-	unsigned frac, fracstep;
-	unsigned p1[1024], p2[1024];
-	byte *pix1, *pix2, *pix3, *pix4;
-
-	fracstep = inwidth * 0x10000 / outwidth;
-
-	frac = fracstep >> 2;
-
-	for (i = 0; i < outwidth; i++)
-	{
-		p1[i] = 4 * (frac >> 16);
-		frac += fracstep;
-	}
-
-	frac = 3 * (fracstep >> 2);
-
-	for (i = 0; i < outwidth; i++)
-	{
-		p2[i] = 4 * (frac >> 16);
-		frac += fracstep;
-	}
-
-	for (i = 0; i < outheight; i++, out += outwidth)
-	{
-		inrow = in + inwidth * (int)((i + 0.25) * inheight / outheight);
-		inrow2 = in + inwidth * (int)((i + 0.75) * inheight / outheight);
-
-		for (j = 0; j < outwidth; j++)
-		{
-			pix1 = (byte *)inrow + p1[j];
-			pix2 = (byte *)inrow + p2[j];
-			pix3 = (byte *)inrow2 + p1[j];
-			pix4 = (byte *)inrow2 + p2[j];
-			((byte *)(out + j))[0] = (pix1[0] + pix2[0] + pix3[0] + pix4[0]) >> 2;
-			((byte *)(out + j))[1] = (pix1[1] + pix2[1] + pix3[1] + pix4[1]) >> 2;
-			((byte *)(out + j))[2] = (pix1[2] + pix2[2] + pix3[2] + pix4[2]) >> 2;
-			((byte *)(out + j))[3] = (pix1[3] + pix2[3] + pix3[3] + pix4[3]) >> 2;
-		}
 	}
 }
 
@@ -646,6 +607,7 @@ R_Upload32Soft(unsigned *data, int width, int height, qboolean mipmap)
 
 	if (scaled_width * scaled_height > sizeof(scaled) / 4)
 	{
+		// this can't really happen (because they're clamped to 256 above), but whatever
 		ri.Sys_Error(ERR_DROP, "R_Upload32: too big");
 	}
 
@@ -693,8 +655,8 @@ R_Upload32Soft(unsigned *data, int width, int height, qboolean mipmap)
 	}
 	else
 	{
-		R_ResampleTexture(data, width, height, scaled,
-				scaled_width, scaled_height);
+		ResizeSTB((byte *)data, width, height,
+				  (byte *)scaled, scaled_width, scaled_height);
 	}
 
 	R_LightScaleTexture(scaled, scaled_width, scaled_height, !mipmap);
