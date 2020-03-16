@@ -178,6 +178,10 @@ int GL3_PrepareForWindow(void)
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+#ifdef __SWITCH__
+	// explicitly tell it to use "desktop" GL with a compat profile
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+#endif
 
 	if (SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8) == 0)
 	{
@@ -246,6 +250,9 @@ int GL3_PrepareForWindow(void)
  */
 int GL3_InitContext(void* win)
 {
+#ifdef __SWITCH__ /* already have one, can't reinit */
+	if (context) return true;
+#endif
 	// Coders are stupid.
 	if (win == NULL)
 	{
@@ -341,6 +348,7 @@ int GL3_InitContext(void* win)
  */
 void GL3_ShutdownContext()
 {
+#ifndef __SWITCH__ /* window stays, context stays as well; gets deleted in GLimp_Shutdown */
 	if (window)
 	{
 		if(context)
@@ -349,4 +357,5 @@ void GL3_ShutdownContext()
 			context = NULL;
 		}
 	}
+#endif
 }

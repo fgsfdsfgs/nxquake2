@@ -24,3 +24,4 @@ The documentation is split into several documents:
 * [Contributing Guide](06_contributing.md)
 * [Multiplayer Server Configuration](07_multiplayer.md)
 * [File Listings](08_filelists.md)
+* [Switch Version](99_switch.md)

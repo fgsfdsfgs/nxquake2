@@ -29,10 +29,6 @@
 #include "../../client/menu/header/qmenu.h"
 #include "header/qmenu.h"
 
-#ifdef __SWITCH__
-extern qboolean fb_big;
-#endif
-
 extern void M_ForceMenuOff(void);
 
 static cvar_t *r_mode;
@@ -179,6 +175,7 @@ ApplyChanges(void *unused)
 			restart = true;
 		}
 	}
+#endif
 
 	/* auto mode */
 	if (!strcmp(s_mode_list.itemnames[s_mode_list.curvalue],
@@ -193,10 +190,11 @@ ApplyChanges(void *unused)
 		/* Restarts automatically */
 		Cvar_SetValue("r_mode", -1);
 	}
-#else
-	restart = (fb_big != s_mode_list.curvalue);
-	fb_big = s_mode_list.curvalue;
-#endif
+	else
+	{
+		/* Restarts automatically */
+		Cvar_SetValue("r_mode", s_mode_list.curvalue);
+	}
 
 #ifndef __SWITCH__
 	if (s_display_list.curvalue != GLimp_GetWindowDisplayIndex() )
@@ -268,24 +266,21 @@ VID_MenuInit(void)
 
 	static const char *renderers[] = {
 #ifdef __SWITCH__
-			"[OpenGL 3.2]",
+		"[OpenGL 3.2]",
 #else
-			"[OpenGL 1.4]",
-			"[OpenGL 3.2]",
-			"[Software  ]",
-			"[Custom    ]",
+		"[OpenGL 1.4]",
+		"[OpenGL 3.2]",
+		"[Software  ]",
+		CUSTOM_MODE_NAME,
 #endif
-			0
-	};
-
-#ifdef __SWITCH__
-	static const char *resolutions[] = {
-		"[1280 720  ]",
-		"[1920 1080 ]",
 		0
 	};
-#else
+
 	static const char *resolutions[] = {
+#ifdef __SWITCH__
+		"[1280 720  ]",
+		"[1920 1080 ]",
+#else
 		"[320 240   ]",
 		"[400 300   ]",
 		"[512 384   ]",
@@ -318,11 +313,11 @@ VID_MenuInit(void)
 		"[3840 2160 ]",
 		"[4096 2160 ]",
 		"[5120 2880 ]",
+#endif
 		AUTO_MODE_NAME,
 		CUSTOM_MODE_NAME,
 		0
 	};
-#endif
 
 	static const char *uiscale_names[] = {
 		"auto",
@@ -442,9 +437,6 @@ VID_MenuInit(void)
 	s_mode_list.generic.y = (y += 10);
 	s_mode_list.itemnames = resolutions;
 
-#ifdef __SWITCH__
-	s_mode_list.curvalue = fb_big;
-#else
 	if (r_mode->value >= 0)
 	{
 		s_mode_list.curvalue = r_mode->value;
@@ -459,7 +451,6 @@ VID_MenuInit(void)
 		// 'custom'
 		s_mode_list.curvalue = GetCustomValue(&s_mode_list);
 	}
-#endif
 
 #ifndef __SWITCH__
 	if (GLimp_GetNumVideoDisplays() > 1)

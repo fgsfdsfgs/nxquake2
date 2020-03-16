@@ -33,10 +33,9 @@ Copy the `baseq2` directory from your Quake 2 installation to `/switch/nxquake2/
 
 OGG music is supported and should be placed into `/switch/nxquake2/baseq2/music/`. See below for details.
 
-Mission Packs and mods are not supported yet.
+Non-opensourced mods aren't supported at all.
 
 If the game crashes, check `/switch/nxquake2/crash.log` for details.
-
 ## Documentation
 
 Before asking any question, read through the documentation! The current

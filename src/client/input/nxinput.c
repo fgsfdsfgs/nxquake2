@@ -109,6 +109,10 @@ static qboolean left_trigger = false;
 static qboolean right_trigger = false;
 qboolean show_haptic = false;
 
+// the joystick altselector that turns K_JOYX into K_JOYX_ALT
+// is pressed
+qboolean joy_altselector_pressed = false;
+
 /* Haptic feedback types */
 enum QHARPICTYPES {
 	HAPTIC_EFFECT_UNKNOWN = -1,
@@ -913,6 +917,18 @@ IN_MLookUp(void)
 	IN_CenterView();
 }
 
+static void
+IN_JoyAltSelectorDown(void)
+{
+	joy_altselector_pressed = true;
+}
+
+static void
+IN_JoyAltSelectorUp(void)
+{
+	joy_altselector_pressed = false;
+}
+
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 /*
  * Shutdown haptic functionality
@@ -1315,6 +1331,9 @@ IN_Init(void)
 
 	Cmd_AddCommand("+mlook", IN_MLookDown);
 	Cmd_AddCommand("-mlook", IN_MLookUp);
+
+	Cmd_AddCommand("+joyaltselector", IN_JoyAltSelectorDown);
+	Cmd_AddCommand("-joyaltselector", IN_JoyAltSelectorUp);
 
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 	SDL_StartTextInput();

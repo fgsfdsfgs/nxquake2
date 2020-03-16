@@ -33,6 +33,10 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
 
+#ifdef __SWITCH__
+#include <switch.h> // for appletOperationMode
+#endif
+
 int glimp_refreshRate = -1;
 
 static cvar_t *vid_displayrefreshrate;
@@ -336,7 +340,7 @@ static void
 ShutdownGraphics(void)
 {
 	ClampDisplayIndexCvar();
-
+#ifndef __SWITCH__ /* cannot recreate the window later, so do nothing */
 	if (window)
 	{
 		/* save current display as default */
@@ -358,6 +362,7 @@ ShutdownGraphics(void)
 
 		window = NULL;
 	}
+#endif
 
 	// make sure that after vid_restart the refreshrate will be queried from SDL2 again.
 	glimp_refreshRate = -1;
@@ -412,6 +417,17 @@ void
 GLimp_Shutdown(void)
 {
 	ShutdownGraphics();
+#ifdef __SWITCH__
+	/* HACK: NOW we can destroy our context and window */
+	if (window)
+	{
+		SDL_GLContext context = SDL_GL_GetCurrentContext();
+		SDL_GL_MakeCurrent(window, NULL);
+		SDL_GL_DeleteContext(context);
+		SDL_DestroyWindow(window);
+		window = NULL;
+	}
+#endif
 
 	if (SDL_WasInit(SDL_INIT_EVERYTHING) == SDL_INIT_VIDEO)
 	{
@@ -437,6 +453,9 @@ GLimp_InitGraphics(int fullscreen, int *pwidth, int *pheight)
 	int height = *pheight;
 	unsigned int fs_flag = 0;
 
+#ifdef __SWITCH__
+	fs_flag = 0; /* this will cause the window to stretch if smaller than 720p */
+#else
 	if (fullscreen == 1)
 	{
 		fs_flag = SDL_WINDOW_FULLSCREEN_DESKTOP;
@@ -445,7 +464,19 @@ GLimp_InitGraphics(int fullscreen, int *pwidth, int *pheight)
 	{
 		fs_flag = SDL_WINDOW_FULLSCREEN;
 	}
+#endif
 
+#ifdef __SWITCH__
+	/* on the switch we just resize the window if it exists */
+	if (window)
+	{
+		initSuccessful = true;
+		viddef.width = width;
+		viddef.height = height;
+		SDL_SetWindowSize(window, width, height);
+		return true;
+	}
+#else
 	/* Only do this if we already have a working window and a fully
 	initialized rendering backend GLimp_InitGraphics() is also
 	called when recovering if creating GL context fails or the
@@ -466,6 +497,7 @@ GLimp_InitGraphics(int fullscreen, int *pwidth, int *pheight)
 			return true;
 		}
 	}
+#endif
 
 	/* Is the surface used? */
 	if (window)
@@ -523,6 +555,7 @@ GLimp_InitGraphics(int fullscreen, int *pwidth, int *pheight)
 				SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
 				SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
 			}
+#ifndef __SWITCH__ /* 1280x720 is the default here */
 			else if (width != 640 || height != 480 || (flags & fs_flag))
 			{
 				Com_Printf("SDL SetVideoMode failed: %s\n", SDL_GetError());
@@ -538,6 +571,7 @@ GLimp_InitGraphics(int fullscreen, int *pwidth, int *pheight)
 				*pheight = height = 480;
 				flags &= ~fs_flag;
 			}
+#endif
 			else
 			{
 				Com_Error(ERR_FATAL, "Failed to revert to r_mode 4. Exiting...\n");
@@ -674,6 +708,21 @@ GLimp_GetRefreshRate(void)
 qboolean
 GLimp_GetDesktopMode(int *pwidth, int *pheight)
 {
+#ifdef __SWITCH__
+	// SDL_GetDesktopDisplayMode will always return 1920x1080, so just
+	// check whether we're docked or not
+	if (appletGetOperationMode() == AppletOperationMode_Docked)
+	{
+		*pwidth = 1920;
+		*pheight = 1080;
+	}
+	else
+	{
+		*pwidth = 1280;
+		*pheight = 720;
+	}
+	return true;
+#else
 	// Declare display mode structure to be filled in.
 	SDL_DisplayMode mode;
 
@@ -702,6 +751,7 @@ GLimp_GetDesktopMode(int *pwidth, int *pheight)
 	*pwidth = mode.w;
 	*pheight = mode.h;
 	return true;
+#endif
 }
 
 const char**

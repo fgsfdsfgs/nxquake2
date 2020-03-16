@@ -200,7 +200,7 @@ GL3_Register(void)
 	gl_msaa_samples = ri.Cvar_Get ( "gl_msaa_samples", "0", CVAR_ARCHIVE );
 	gl_retexturing = ri.Cvar_Get("gl_retexturing", "1", CVAR_ARCHIVE);
 	gl3_debugcontext = ri.Cvar_Get("gl3_debugcontext", "0", 0);
-	r_mode = ri.Cvar_Get("r_mode", "4", CVAR_ARCHIVE);
+	r_mode = ri.Cvar_Get("r_mode", "-2", CVAR_ARCHIVE);
 	r_customwidth = ri.Cvar_Get("r_customwidth", "1024", CVAR_ARCHIVE);
 	r_customheight = ri.Cvar_Get("r_customheight", "768", CVAR_ARCHIVE);
 	gl3_particle_size = ri.Cvar_Get("gl3_particle_size", "40", CVAR_ARCHIVE);
@@ -384,7 +384,11 @@ GL3_SetMode(void)
 	{
 		if (r_mode->value == -1)
 		{
+#ifdef __SWITCH__
+			gl3state.prev_mode = 0; /* safe default for custom mode */
+#else
 			gl3state.prev_mode = 4; /* safe default for custom mode */
+#endif
 		}
 		else
 		{
@@ -466,7 +470,11 @@ GL3_Init(void)
 	GL3_Register();
 
 	/* set our "safe" mode */
+#ifdef __SWITCH__
+	gl3state.prev_mode = 0;
+#else
 	gl3state.prev_mode = 4;
+#endif
 	//gl_state.stereo_mode = gl1_stereo->value;
 
 	/* create the window and set up the context */
@@ -1887,6 +1895,7 @@ void R_Printf(int level, const char* msg, ...)
 	va_end(argptr);
 }
 
+#ifndef __SWITCH__
 /*
  * this is only here so the functions in shared source files
  * (shared.c, rand.c, flash.c, mem.c/hunk.c) can link
@@ -1912,3 +1921,4 @@ Com_Printf(char *msg, ...)
 	ri.Com_VPrintf(PRINT_ALL, msg, argptr);
 	va_end(argptr);
 }
+#endif
