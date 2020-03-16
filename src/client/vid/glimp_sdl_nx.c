@@ -405,3 +405,21 @@ GLimp_GetRefreshRate(void)
 
 	return glimp_refreshRate;
 }
+
+const char**
+GLimp_GetDisplayIndices(void)
+{
+	return (const char**)displayindices;
+}
+
+int
+GLimp_GetNumVideoDisplays(void)
+{
+	return num_displays;
+}
+
+int
+GLimp_GetWindowDisplayIndex(void)
+{
+	return last_display;
+}
