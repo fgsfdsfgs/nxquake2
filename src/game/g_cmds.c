@@ -72,6 +72,11 @@ OnSameTeam(edict_t *ent1, edict_t *ent2)
 		return false;
 	}
 
+	if (coop->value)
+	{
+		return true; /* everyone is on the same team in coop */
+	}
+
 	if (!((int)(dmflags->value) & (DF_MODELTEAMS | DF_SKINTEAMS)))
 	{
 		return false;

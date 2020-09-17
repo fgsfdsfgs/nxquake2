@@ -533,7 +533,7 @@ T_Damage(edict_t *targ, edict_t *inflictor, edict_t *attacker,
 	   yourself) knockback still occurs */
 	if ((targ != attacker) && ((deathmatch->value &&
 		  ((int)(dmflags->value) & (DF_MODELTEAMS | DF_SKINTEAMS))) ||
-		 coop->value))
+		 coop->value) && (mod != MOD_TELEFRAG))
 	{
 		if (OnSameTeam(targ, attacker))
 		{
