@@ -510,6 +510,7 @@ extern cvar_t *deathmatch;
 extern cvar_t *coop;
 extern cvar_t *coop_pickup_weapons;
 extern cvar_t *coop_elevator_delay;
+extern cvar_t *coop_spawn_telefrag;
 extern cvar_t *dmflags;
 extern cvar_t *skill;
 extern cvar_t *fraglimit;
@@ -615,6 +616,7 @@ qboolean Add_Ammo(edict_t *ent, gitem_t *item, int count);
 void Touch_Item(edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *surf);
 
 /* g_utils.c */
+qboolean Unstuck(edict_t *ent);
 qboolean KillBox(edict_t *ent);
 void G_ProjectSource(vec3_t point, vec3_t distance, vec3_t forward,
 		vec3_t right, vec3_t result);

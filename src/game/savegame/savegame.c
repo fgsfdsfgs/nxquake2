@@ -234,6 +234,7 @@ InitGame(void)
 	coop = gi.cvar("coop", "0", CVAR_LATCH);
 	coop_pickup_weapons = gi.cvar("coop_pickup_weapons", "1", CVAR_ARCHIVE);
 	coop_elevator_delay = gi.cvar("coop_elevator_delay", "1.0", CVAR_ARCHIVE);
+	coop_spawn_telefrag = gi.cvar("coop_spawn_telefrag", "1", CVAR_ARCHIVE);
 	skill = gi.cvar("skill", "1", CVAR_LATCH);
 	maxentities = gi.cvar("maxentities", "1024", CVAR_LATCH);
 

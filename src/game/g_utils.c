@@ -693,3 +693,72 @@ KillBox(edict_t *ent)
 
 	return true; /* all clear */
 }
+
+/*
+ * Tries to move the entity out of the entity it is stuck in.
+ * ent should be unlinked!
+ */
+qboolean
+Unstuck(edict_t *ent)
+{
+	static vec3_t directions[] =
+	{
+		{  1.f,  0.f,  0.f },
+		{ -1.f,  0.f,  0.f },
+		{  0.f,  1.f,  0.f },
+		{  0.f, -1.f,  0.f },
+		{  0.f,  0.f,  1.f },
+	};
+
+	vec3_t dist;
+	vec3_t startpos, endpos;
+	trace_t tr;
+	unsigned int i;
+
+	if (!ent)
+	{
+		return false;
+	}
+
+	VectorCopy(ent->s.origin, startpos);
+
+	/* confirm that we are actually stuck */
+	tr = gi.trace(startpos, ent->mins, ent->maxs, startpos,
+			NULL, MASK_PLAYERSOLID);
+	if (!tr.startsolid)
+	{
+		return true; /* nope */
+	}
+
+	/* pick trace distances slightly larger than each size */
+	for (i = 0; i < 3; ++i)
+	{
+		dist[i] = ent->maxs[i] - ent->mins[i] + 1.f;
+	}
+
+	/* try different cardinal directions (except down) */
+	for (i = 0; i < sizeof(directions) / sizeof(directions[0]); ++i)
+	{
+		VectorMA(startpos, dist[i >> 1], directions[i], endpos);
+
+		/* check if we fit into endpoint */
+		tr = gi.trace(endpos, ent->mins, ent->maxs, endpos,
+				NULL, MASK_PLAYERSOLID);
+
+		if (!tr.startsolid)
+		{
+			/* check if we went through a wall or something */
+			tr = gi.trace(ent->s.origin, ent->mins, ent->maxs, endpos,
+					NULL, MASK_SOLID);
+			if (tr.fraction == 1.0f)
+			{
+				/* all clear; move the entity */
+				VectorCopy(endpos, ent->s.origin);
+				VectorCopy(ent->s.origin, ent->s.old_origin);
+				return true;
+			}
+		}
+	}
+
+	return false; /* could not unstick */
+}

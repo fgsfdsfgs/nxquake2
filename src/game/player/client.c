@@ -1650,6 +1650,7 @@ PutClientInServer(edict_t *ent)
 	int i;
 	client_persistant_t saved;
 	client_respawn_t resp;
+	qboolean spawned;
 
 	/* find a spawn point do it before setting
 	   health back up, so farthest ranging
@@ -1708,12 +1709,12 @@ PutClientInServer(edict_t *ent)
 	ent->groundentity = NULL;
 	ent->client = &game.clients[index];
 	ent->takedamage = DAMAGE_AIM;
+	ent->solid = SOLID_BBOX;
 	ent->movetype = MOVETYPE_WALK;
 	ent->viewheight = 22;
 	ent->inuse = true;
 	ent->classname = "player";
 	ent->mass = 200;
-	ent->solid = SOLID_BBOX;
 	ent->deadflag = DEAD_NO;
 	ent->air_finished = level.time + 12;
 	ent->clipmask = MASK_PLAYERSOLID;
@@ -1802,7 +1803,16 @@ PutClientInServer(edict_t *ent)
 		client->resp.spectator = false;
 	}
 
-	if (!KillBox(ent))
+	if (coop->value && !coop_spawn_telefrag->value)
+	{
+		spawned = Unstuck(ent) || KillBox(ent);
+	}
+	else
+	{
+		spawned = KillBox(ent);
+	}
+
+	if (!spawned)
 	{
 		/* could't spawn in? */
 	}
