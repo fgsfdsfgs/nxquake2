@@ -514,6 +514,10 @@ extern cvar_t *coop_spawn_telefrag;
 extern cvar_t *coop_ammo_scale;
 extern cvar_t *coop_broadcast_weapons;
 extern cvar_t *coop_min_health;
+extern cvar_t *coop_allow_warp;
+extern cvar_t *coop_respawn_in_place;
+extern cvar_t *coop_keep_weapons;
+extern cvar_t *coop_exit_cooldown;
 extern cvar_t *dmflags;
 extern cvar_t *skill;
 extern cvar_t *fraglimit;
@@ -946,6 +950,10 @@ struct gclient_s
 
 	edict_t *chase_target; /* player we are chasing */
 	qboolean update_chase; /* need to update chase info? */
+
+	qboolean coop_canwarp; /* coop_warpspot has a valid position */
+	vec3_t coop_warpspot; /* last pickup position for coopwarp */
+	vec3_t coop_warpangles; /* last view angles for coopwarp */
 };
 
 struct edict_s

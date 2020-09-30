@@ -197,30 +197,43 @@ Pickup_Weapon(edict_t *ent, edict_t *other)
 
 	other->client->pers.inventory[index]++;
 
-	if (coop->value && coop_broadcast_weapons->value)
+	if (coop->value)
 	{
-		for (i = 0; i < game.maxclients; ++i)
+		if (coop_keep_weapons->value)
 		{
-			player = &g_edicts[1 + i];
-			if (player->inuse && player->client && !player->client->resp.spectator && !player->client->pers.inventory[index])
+			/* also save the new weapon in the coop respawn data */
+			other->client->resp.coop_respawn.inventory[index]++;
+		}
+
+		if (coop_broadcast_weapons->value)
+		{
+			for (i = 0; i < game.maxclients; ++i)
 			{
-				player->client->pers.inventory[index]++;
-				/* give the broadcast receiver some ammo since this is their first pickup */
-				if ((int)dmflags->value & DF_INFINITE_AMMO)
+				player = &g_edicts[1 + i];
+				if (player->inuse && player->client && !player->client->resp.spectator && !player->client->pers.inventory[index])
 				{
-					Add_Ammo(player, ammo, 1000);
+					player->client->pers.inventory[index]++;
+					if (coop_keep_weapons->value)
+					{
+						player->client->resp.coop_respawn.inventory[index]++;
+					}
+					/* give the broadcast receiver some ammo since this is their first pickup */
+					if ((int)dmflags->value & DF_INFINITE_AMMO)
+					{
+						Add_Ammo(player, ammo, 1000);
+					}
+					else
+					{
+						Add_Ammo(player, ammo, quantity);
+					}
+					/* pickup indication */
+					player->client->bonus_alpha = 0.15;
+					player->client->ps.stats[STAT_PICKUP_ICON] =
+						gi.imageindex(ent->item->icon);
+					player->client->ps.stats[STAT_PICKUP_STRING] =
+						CS_ITEMS + ITEM_INDEX(ent->item);
+					player->client->pickup_msg_time = level.time + 3.0;
 				}
-				else
-				{
-					Add_Ammo(player, ammo, quantity);
-				}
-				/* pickup indication */
-				player->client->bonus_alpha = 0.15;
-				player->client->ps.stats[STAT_PICKUP_ICON] =
-					gi.imageindex(ent->item->icon);
-				player->client->ps.stats[STAT_PICKUP_STRING] =
-					CS_ITEMS + ITEM_INDEX(ent->item);
-				player->client->pickup_msg_time = level.time + 3.0;
 			}
 		}
 	}

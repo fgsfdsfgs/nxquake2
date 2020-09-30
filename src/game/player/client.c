@@ -1699,9 +1699,17 @@ PutClientInServer(edict_t *ent)
 	{
 		InitClientPersistant(client);
 	}
-	else if (coop->value && coop_min_health->value && client->pers.health < coop_min_health->value)
+	else if (coop->value)
 	{
-		client->pers.health = coop_min_health->value;
+		if (coop_min_health->value && client->pers.health < coop_min_health->value)
+		{
+			client->pers.health = coop_min_health->value;
+		}
+		if (coop_respawn_in_place->value && client->coop_canwarp)
+		{
+			VectorCopy(client->coop_warpspot, spawn_origin);
+			VectorCopy(client->coop_warpangles, spawn_angles);
+		}
 	}
 
 	client->resp = resp;
@@ -1882,6 +1890,7 @@ ClientBegin(edict_t *ent)
 	}
 
 	ent->client = game.clients + (ent - g_edicts - 1);
+	ent->client->coop_canwarp = false; /* don't use old warpspot */
 
 	if (deathmatch->value)
 	{

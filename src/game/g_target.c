@@ -433,6 +433,21 @@ use_target_changelevel(edict_t *self, edict_t *other, edict_t *activator)
 		}
 	}
 
+	/* if coop, don't touch if the player just spawned */
+	/* to avoid people accidentally going back on respawn */
+	if (coop->value && coop_exit_cooldown->value > 0.f)
+	{
+		if (activator && activator->client && other && other->classname)
+		{
+			const int touched = !Q_stricmp(other->classname, "trigger_multiple");
+			const float timeout = level.time - coop_exit_cooldown->value;
+			if (touched && activator->client->respawn_time > timeout)
+			{
+				return;
+			}
+		}
+	}
+
 	/* if noexit, do a ton of damage to other */
 	if (deathmatch->value && !((int)dmflags->value & DF_ALLOW_EXIT) &&
 		(other != world))

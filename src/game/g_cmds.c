@@ -1282,6 +1282,138 @@ Cmd_Teleport_f(edict_t *ent)
 }
 
 void
+Cmd_ClearWarp_f(edict_t *ent)
+{
+	if (!ent || !ent->client)
+	{
+		return;
+	}
+
+	ent->client->coop_canwarp = false;
+}
+
+void
+Cmd_CoopWarp_f(edict_t *ent)
+{
+	trace_t tr;
+	edict_t *cent;
+	gclient_t *targ;
+	const char *clname;
+	int i, namelen;
+
+	if (!ent)
+	{
+		return;
+	}
+
+	if (!coop->value || !coop_allow_warp->value)
+	{
+		gi.cprintf(ent, PRINT_HIGH, "This command is not available.\n");
+		return;
+	}
+
+	if (gi.argc() != 2)
+	{
+		gi.cprintf(ent, PRINT_HIGH, "Usage: coopwarp name\n");
+		return;
+	}
+
+	targ = NULL;
+	clname = gi.argv(1);
+	namelen = strlen(clname);
+
+	/* Find the client to teleport to. */
+	for (i = 0; i < game.maxclients; ++i)
+	{
+		cent = &g_edicts[1 + i];
+		if (cent->inuse && cent->client)
+		{
+			if (!Q_strncasecmp(cent->client->pers.netname, clname, namelen))
+			{
+				targ = cent->client;
+				break;
+			}
+		}
+	}
+
+	if (targ == NULL || !targ->coop_canwarp)
+	{
+		gi.cprintf(ent, PRINT_HIGH, "Could not find spot for player '%s'.\n", clname);
+		return;
+	}
+
+	/* Check if the target point is unoccupied. */
+	tr = gi.trace(targ->coop_warpspot, ent->mins, ent->maxs, targ->coop_warpspot,
+			ent, MASK_PLAYERSOLID);
+	if (tr.startsolid)
+	{
+		gi.cprintf(ent, PRINT_HIGH, "Warp spot is occupied. Try again later.\n");
+		return;
+	}
+
+	/* Unlink entity to prevent unwanted interactions with
+	   other entities. This works because linkentity()
+	   uses the first available slot and the player is
+	   always at postion 0. */
+	gi.unlinkentity(ent);
+
+	/* Set new position */
+	ent->s.origin[0] = targ->coop_warpspot[0];
+	ent->s.origin[1] = targ->coop_warpspot[1];
+	ent->s.origin[2] = targ->coop_warpspot[2];
+
+	/* Remove velocity and keep the entity briefly in place
+	   to give the server and clients time to catch up. */
+	VectorClear(ent->velocity);
+	ent->client->ps.pmove.pm_time = 20;
+	ent->client->ps.pmove.pm_flags |= PMF_TIME_TELEPORT;
+
+	/* Remove viewangles. They'll be recalculated
+	   by the client at the next frame. */
+	VectorClear(ent->s.angles);
+	VectorClear(ent->client->ps.viewangles);
+	VectorClear(ent->client->v_angle);
+
+	/* And link it back in. */
+	gi.linkentity(ent);
+
+	gi.cprintf(ent, PRINT_HIGH, "Teleported to %s's last known location.\n", targ->pers.netname);
+}
+
+void
+Cmd_Unstuck_f(edict_t *ent)
+{
+	if (!ent)
+	{
+		return;
+	}
+
+	if (!coop->value)
+	{
+		gi.cprintf(ent, PRINT_HIGH, "This command is not available.\n");
+		return;
+	}
+
+	gi.unlinkentity(ent);
+
+	Unstuck(ent);
+
+	/* Remove velocity and keep the entity briefly in place
+	   to give the server and clients time to catch up. */
+	VectorClear(ent->velocity);
+	ent->client->ps.pmove.pm_time = 20;
+	ent->client->ps.pmove.pm_flags |= PMF_TIME_TELEPORT;
+
+	/* Remove viewangles. They'll be recalculated
+	   by the client at the next frame. */
+	VectorClear(ent->s.angles);
+	VectorClear(ent->client->ps.viewangles);
+	VectorClear(ent->client->v_angle);
+
+	gi.linkentity(ent);
+}
+
+void
 Cmd_ListEntities_f(edict_t *ent)
 {
 	if ((deathmatch->value || coop->value) && !sv_cheats->value)
@@ -1706,6 +1838,18 @@ ClientCommand(edict_t *ent)
 	else if (Q_stricmp(cmd, "teleport") == 0)
 	{
 		Cmd_Teleport_f(ent);
+	}
+	else if (Q_stricmp(cmd, "coopwarp") == 0)
+	{
+		Cmd_CoopWarp_f(ent);
+	}
+	else if (Q_stricmp(cmd, "clearwarp") == 0)
+	{
+		Cmd_ClearWarp_f(ent);
+	}
+	else if (Q_stricmp(cmd, "unstuck") == 0)
+	{
+		Cmd_Unstuck_f(ent);
 	}
 	else if (Q_stricmp(cmd, "listentities") == 0)
 	{
