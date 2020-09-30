@@ -72,7 +72,7 @@ OnSameTeam(edict_t *ent1, edict_t *ent2)
 		return false;
 	}
 
-	if (coop->value)
+	if (ent1->client && ent2->client && coop->value)
 	{
 		return true; /* everyone is on the same team in coop */
 	}

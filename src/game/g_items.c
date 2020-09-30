@@ -737,6 +737,11 @@ Pickup_Ammo(edict_t *ent, edict_t *other)
 		count = ent->item->quantity;
 	}
 
+	if (coop->value && coop_ammo_scale->value > 1.f && !(ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)))
+	{
+		count *= coop_ammo_scale->value;
+	}
+
 	oldcount = other->client->pers.inventory[ITEM_INDEX(ent->item)];
 
 	if (!Add_Ammo(other, ent->item, count))

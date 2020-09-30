@@ -1699,6 +1699,10 @@ PutClientInServer(edict_t *ent)
 	{
 		InitClientPersistant(client);
 	}
+	else if (coop->value && coop_min_health->value && client->pers.health < coop_min_health->value)
+	{
+		client->pers.health = coop_min_health->value;
+	}
 
 	client->resp = resp;
 

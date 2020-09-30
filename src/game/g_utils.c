@@ -706,14 +706,20 @@ Unstuck(edict_t *ent)
 		{  1.f,  0.f,  0.f },
 		{ -1.f,  0.f,  0.f },
 		{  0.f,  1.f,  0.f },
-		{  0.f, -1.f,  0.f },
+		{  1.f,  1.f,  0.f },
+		{ -1.f,  1.f,  0.f },
 		{  0.f,  0.f,  1.f },
+		{  1.f,  0.f,  1.f },
+		{ -1.f,  0.f,  1.f },
+		{  0.f,  1.f,  1.f },
+		{  1.f,  1.f,  1.f },
+		{ -1.f,  1.f,  1.f },
 	};
 
 	vec3_t dist;
 	vec3_t startpos, endpos;
 	trace_t tr;
-	unsigned int i;
+	unsigned int i, j;
 
 	if (!ent)
 	{
@@ -739,7 +745,10 @@ Unstuck(edict_t *ent)
 	/* try different cardinal directions (except down) */
 	for (i = 0; i < sizeof(directions) / sizeof(directions[0]); ++i)
 	{
-		VectorMA(startpos, dist[i >> 1], directions[i], endpos);
+		for (j = 0; j < 3; ++j)
+		{
+			endpos[j] = startpos[j] + dist[j] * directions[i][j];
+		}
 
 		/* check if we fit into endpoint */
 		tr = gi.trace(endpos, ent->mins, ent->maxs, endpos,
