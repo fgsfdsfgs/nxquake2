@@ -853,6 +853,10 @@ typedef struct
 	int helpchanged;
 
 	qboolean spectator; /* client is a spectator */
+
+	qboolean canwarp; /* coop_warpspot has a valid position */
+	vec3_t warpspot; /* last pickup position for coopwarp */
+	vec3_t warpangles; /* last view angles for coopwarp */
 } client_persistant_t;
 
 /* client data that stays across deathmatch respawns */
@@ -950,10 +954,6 @@ struct gclient_s
 
 	edict_t *chase_target; /* player we are chasing */
 	qboolean update_chase; /* need to update chase info? */
-
-	qboolean coop_canwarp; /* coop_warpspot has a valid position */
-	vec3_t coop_warpspot; /* last pickup position for coopwarp */
-	vec3_t coop_warpangles; /* last view angles for coopwarp */
 };
 
 struct edict_s

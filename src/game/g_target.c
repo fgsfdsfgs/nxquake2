@@ -441,7 +441,7 @@ use_target_changelevel(edict_t *self, edict_t *other, edict_t *activator)
 		{
 			const int touched = !Q_stricmp(other->classname, "trigger_multiple");
 			const float timeout = level.time - coop_exit_cooldown->value;
-			if (touched && activator->client->respawn_time > timeout)
+			if (touched && timeout > 0 && activator->client->respawn_time > timeout)
 			{
 				return;
 			}

@@ -1232,9 +1232,9 @@ Touch_Item(edict_t *ent, edict_t *other, cplane_t *plane /* unused */, csurface_
 		/* save current position as valid coop warp point if coop */
 		if (coop->value)
 		{
-			VectorCopy(other->s.origin, other->client->coop_warpspot);
-			VectorCopy(other->client->v_angle, other->client->coop_warpangles);
-			other->client->coop_canwarp = true;
+			VectorCopy(other->s.origin, other->client->pers.warpspot);
+			VectorCopy(other->client->v_angle, other->client->pers.warpangles);
+			other->client->pers.canwarp = true;
 		}
 	}
 

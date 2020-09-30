@@ -1674,6 +1674,9 @@ PutClientInServer(edict_t *ent)
 		memcpy(userinfo, client->pers.userinfo, sizeof(userinfo));
 		resp.coop_respawn.game_helpchanged = client->pers.game_helpchanged;
 		resp.coop_respawn.helpchanged = client->pers.helpchanged;
+		resp.coop_respawn.canwarp = client->pers.canwarp;
+		VectorCopy(client->pers.warpspot, resp.coop_respawn.warpspot);
+		VectorCopy(client->pers.warpangles, resp.coop_respawn.warpangles);
 		client->pers = resp.coop_respawn;
 		ClientUserinfoChanged(ent, userinfo);
 
@@ -1705,10 +1708,10 @@ PutClientInServer(edict_t *ent)
 		{
 			client->pers.health = coop_min_health->value;
 		}
-		if (coop_respawn_in_place->value && client->coop_canwarp)
+		if (coop_respawn_in_place->value && client->pers.canwarp)
 		{
-			VectorCopy(client->coop_warpspot, spawn_origin);
-			VectorCopy(client->coop_warpangles, spawn_angles);
+			VectorCopy(client->pers.warpspot, spawn_origin);
+			VectorCopy(client->pers.warpangles, spawn_angles);
 		}
 	}
 
@@ -1890,7 +1893,7 @@ ClientBegin(edict_t *ent)
 	}
 
 	ent->client = game.clients + (ent - g_edicts - 1);
-	ent->client->coop_canwarp = false; /* don't use old warpspot */
+	ent->client->pers.canwarp = false; /* reset warp spot every level change */
 
 	if (deathmatch->value)
 	{

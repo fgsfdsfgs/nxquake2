@@ -1289,7 +1289,7 @@ Cmd_ClearWarp_f(edict_t *ent)
 		return;
 	}
 
-	ent->client->coop_canwarp = false;
+	ent->client->pers.canwarp = false;
 }
 
 void
@@ -1336,15 +1336,15 @@ Cmd_CoopWarp_f(edict_t *ent)
 		}
 	}
 
-	if (targ == NULL || !targ->coop_canwarp)
+	if (targ == NULL || !targ->pers.canwarp)
 	{
 		gi.cprintf(ent, PRINT_HIGH, "Could not find spot for player '%s'.\n", clname);
 		return;
 	}
 
 	/* Check if the target point is unoccupied. */
-	tr = gi.trace(targ->coop_warpspot, ent->mins, ent->maxs, targ->coop_warpspot,
-			ent, MASK_PLAYERSOLID);
+	tr = gi.trace(targ->pers.warpspot, ent->mins, ent->maxs,
+		targ->pers.warpspot, ent, MASK_PLAYERSOLID);
 	if (tr.startsolid)
 	{
 		gi.cprintf(ent, PRINT_HIGH, "Warp spot is occupied. Try again later.\n");
@@ -1358,9 +1358,9 @@ Cmd_CoopWarp_f(edict_t *ent)
 	gi.unlinkentity(ent);
 
 	/* Set new position */
-	ent->s.origin[0] = targ->coop_warpspot[0];
-	ent->s.origin[1] = targ->coop_warpspot[1];
-	ent->s.origin[2] = targ->coop_warpspot[2];
+	ent->s.origin[0] = targ->pers.warpspot[0];
+	ent->s.origin[1] = targ->pers.warpspot[1];
+	ent->s.origin[2] = targ->pers.warpspot[2];
 
 	/* Remove velocity and keep the entity briefly in place
 	   to give the server and clients time to catch up. */
