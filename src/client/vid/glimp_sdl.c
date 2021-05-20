@@ -33,6 +33,10 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
 
+#ifdef __SWITCH__
+#include <switch.h>
+#endif
+
 int glimp_refreshRate = -1;
 
 static cvar_t *vid_displayrefreshrate;
@@ -464,6 +468,12 @@ GLimp_InitGraphics(int fullscreen, int *pwidth, int *pheight)
 	int height = *pheight;
 	unsigned int fs_flag = 0;
 
+#ifdef __SWITCH__
+	/* always fullscreen */
+	fullscreen = 1;
+	Cvar_SetValue("vid_fullscreen", 1);
+#endif
+
 	if (fullscreen == 1)
 	{
 		fs_flag = SDL_WINDOW_FULLSCREEN;
@@ -700,6 +710,21 @@ GLimp_GetRefreshRate(void)
 qboolean
 GLimp_GetDesktopMode(int *pwidth, int *pheight)
 {
+#ifdef __SWITCH__
+	// SDL_GetDesktopDisplayMode will always return 1920x1080, so just
+	// check whether we're docked or not
+	if (appletGetOperationMode() == AppletOperationMode_Console)
+	{
+		*pwidth = 1920;
+		*pheight = 1080;
+	}
+	else
+	{
+		*pwidth = 1280;
+		*pheight = 720;
+	}
+	return true;
+#else
 	// Declare display mode structure to be filled in.
 	SDL_DisplayMode mode;
 
@@ -728,6 +753,7 @@ GLimp_GetDesktopMode(int *pwidth, int *pheight)
 	*pwidth = mode.w;
 	*pheight = mode.h;
 	return true;
+#endif // __SWITCH__
 }
 
 const char**

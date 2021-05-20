@@ -387,7 +387,7 @@ R_RegisterVariables (void)
 	sw_partialrefresh = ri.Cvar_Get("sw_partialrefresh", "1", CVAR_ARCHIVE);
 #endif
 
-	r_mode = ri.Cvar_Get( "r_mode", "0", CVAR_ARCHIVE );
+	r_mode = ri.Cvar_Get( "r_mode", "-2", CVAR_ARCHIVE );
 
 	r_lefthand = ri.Cvar_Get( "hand", "0", CVAR_USERINFO | CVAR_ARCHIVE );
 	r_gunfov = ri.Cvar_Get( "r_gunfov", "80", CVAR_ARCHIVE );
