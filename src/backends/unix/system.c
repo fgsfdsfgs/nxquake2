@@ -68,33 +68,6 @@ extern FILE	*logfile;
 
 /* ================================================================ */
 
-#ifdef __SWITCH__
-
-void
-userAppInit(void)
-{
-	socketInitializeDefault();
-#ifdef DEBUG_NXLINK
-	nxlinkStdio();
-#endif
-	if (solder_init(0) < 0)
-	{
-		fprintf(stderr, "solder init failed: %s\n", dlerror());
-		abort();
-	}
-}
-
-void
-userAppExit(void)
-{
-	solder_quit();
-	socketExit();
-}
-
-#endif
-
-/* ================================================================ */
-
 void
 Sys_Error(char *error, ...)
 {
@@ -123,6 +96,7 @@ Sys_Error(char *error, ...)
 			fclose(f);
 		}
 	}
+	Sys_NX_Shutdown();
 #endif
 
 	exit(1);
@@ -145,6 +119,10 @@ Sys_Quit(void)
 	fcntl(0, F_SETFL, fcntl(0, F_GETFL, 0) & ~FNDELAY);
 
 	printf("------------------------------------\n");
+
+#ifdef __SWITCH__
+	Sys_NX_Shutdown();
+#endif
 
 	exit(0);
 }

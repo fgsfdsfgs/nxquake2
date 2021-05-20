@@ -41,6 +41,12 @@ void registerHandler(void);
 int
 main(int argc, char **argv)
 {
+#ifdef __SWITCH__
+	// early switch init
+	if (!Sys_NX_Init())
+		return 1;
+#endif
+
 	// register signal handler
 	registerHandler();
 

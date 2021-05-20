@@ -549,8 +549,4 @@ void CL_DrawInventory (void);
 void CL_PredictMovement (void);
 trace_t CL_PMTrace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
 
-#ifdef __SWITCH__
-void IN_OnScreenKeyboard(char *out, const int outlen);
-#endif
-
 #endif

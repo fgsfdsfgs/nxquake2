@@ -1522,25 +1522,4 @@ IN_Shutdown(void)
 	}
 }
 
-#ifdef __SWITCH__
-void
-IN_OnScreenKeyboard(char *out, const int out_len)
-{
-	SwkbdConfig kbd;
-	char tmp_out[out_len + 1];
-	Result rc;
-	tmp_out[0] = 0;
-	rc = swkbdCreate(&kbd, 0);
-	if (R_SUCCEEDED(rc))
-	{
-		swkbdConfigMakePresetDefault(&kbd);
-		swkbdConfigSetInitialText(&kbd, out);
-		rc = swkbdShow(&kbd, tmp_out, out_len);
-		if (R_SUCCEEDED(rc))
-			strncpy(out, tmp_out, out_len); 
-		swkbdClose(&kbd);
-	}
-}
-#endif
-
 /* ------------------------------------------------------------------ */

@@ -831,6 +831,13 @@ void Sys_RedirectStdout(void);
 void Sys_SetHighDPIMode(void);
 #endif
 
+// Switch only (nx/system.c)
+#ifdef __SWITCH__
+qboolean Sys_NX_Init(void);
+void Sys_NX_Shutdown(void);
+void Sys_NX_OnScreenKeyboard(char *out, const int out_len);
+#endif
+
 // misc.c
 const char *Sys_GetBinaryDir(void);
 void Sys_SetupFPU(void);

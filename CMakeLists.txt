@@ -256,6 +256,7 @@ set(Backends-NX-Source
 	${BACKENDS_SRC_DIR}/unix/network.c
 	${BACKENDS_SRC_DIR}/unix/signalhandler.c
 	${BACKENDS_SRC_DIR}/unix/system.c
+	${BACKENDS_SRC_DIR}/nx/system.c
 	${BACKENDS_SRC_DIR}/nx/shared/hunk.c
 	)
 

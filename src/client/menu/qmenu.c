@@ -100,12 +100,10 @@ qboolean
 Field_DoEnter(menufield_s *f)
 {
 #ifdef __SWITCH__
-	IN_OnScreenKeyboard(f->buffer, 80);
+	Sys_NX_OnScreenKeyboard(f->buffer, 80);
 	f->cursor = strlen(f->buffer);
 	if (f->cursor > f->visible_length)
 		f->visible_offset = f->cursor - f->visible_length;
-	if (f->generic.callback)
-		f->generic.callback(f);
 	return true;
 #endif
 
