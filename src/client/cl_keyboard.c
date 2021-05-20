@@ -1256,7 +1256,8 @@ Key_Event(int key, qboolean down, qboolean special)
 	if ((key >= K_MOUSE1 && key != K_JOY_BACK) && !keybindings[key] && (cls.key_dest != key_console) &&
 		(cls.state == ca_active))
 	{
-		Com_Printf("%s (%d) is unbound, hit F4 to set.\n", Key_KeynumToString(key), key);
+		// fgsfds: who the fuck thought this warning was a good idea (used to be Com_Printf)
+		Com_DPrintf("%s (%d) is unbound, hit F4 to set.\n", Key_KeynumToString(key), key);
 	}
 
 	/* While in attract loop all keys besides F1 to F12 (to

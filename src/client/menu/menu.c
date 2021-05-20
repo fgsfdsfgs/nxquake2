@@ -218,6 +218,52 @@ M_PushMenu(void (*draw)(void), const char *(*key)(int))
     cls.key_dest = key_menu;
 }
 
+#ifdef __SWITCH__
+int
+Key_GetMenuKey(int key)
+{
+    switch (key)
+    {
+        case K_KP_UPARROW:
+        case K_UPARROW:
+        case K_HAT_UP:
+        case K_JOY14:
+            return K_UPARROW;
+        case K_TAB:
+        case K_KP_DOWNARROW:
+        case K_DOWNARROW:
+        case K_HAT_DOWN:
+        case K_JOY16:
+            return K_DOWNARROW;
+        case K_KP_LEFTARROW:
+        case K_LEFTARROW:
+        case K_HAT_LEFT:
+        case K_TRIG_LEFT:
+        case K_JOY13:
+            return K_LEFTARROW;
+        case K_KP_RIGHTARROW:
+        case K_RIGHTARROW:
+        case K_HAT_RIGHT:
+        case K_TRIG_RIGHT:
+        case K_JOY15:
+            return K_RIGHTARROW;
+        case K_MOUSE1:
+        case K_MOUSE2:
+        case K_MOUSE3:
+        case K_MOUSE4:
+        case K_MOUSE5:
+        case K_JOY1:
+        case K_KP_ENTER:
+        case K_ENTER:
+            return K_ENTER;
+        case K_ESCAPE:
+        case K_JOY_BACK:
+        case K_JOY2:                // Ch0wW : adding B button for BACK.
+            return K_ESCAPE;
+    }
+    return key;
+}
+#else // __SWITCH__
 int
 Key_GetMenuKey(int key)
 {
@@ -295,6 +341,8 @@ Key_GetMenuKey(int key)
 
 	return key;
 }
+#endif // __SWITCH__
+
 const char *
 Default_MenuKey(menuframework_s *m, int key)
 {
@@ -999,11 +1047,17 @@ Keys_MenuKey(int key)
     {
     case K_KP_ENTER:
     case K_ENTER:
+#ifdef __SWITCH__
+    case K_JOY1:
+#endif
         KeyBindingFunc(item);
         return menu_in_sound;
     case K_BACKSPACE: /* delete bindings */
     case K_DEL: /* delete bindings */
     case K_KP_DEL:
+#ifdef __SWITCH__
+    case K_JOY3:
+#endif
         M_UnbindCommand(bindnames[item->generic.localdata[0]][0]);
         return menu_out_sound;
     default:
@@ -1285,6 +1339,32 @@ ControlsResetDefaultsFunc(void *unused)
     Cbuf_AddText("exec default.cfg\n");
     Cbuf_AddText("exec yq2.cfg\n");
     Cbuf_Execute();
+
+    // Ch0wW : Also properly reset the bindings for the Switch system.
+    // (would be a better idea to move this to default.cfg, but someone will
+    // probably accidentally delete that)
+#ifdef __SWITCH__
+    //Movement
+    Cbuf_AddText("bind TRIG_LEFT +moveup\n");   // Jump
+    Cbuf_AddText("bind JOY2 +moveup\n");        // Jump
+    Cbuf_AddText("bind JOY1 +movedown\n");      // Crouch
+    Cbuf_AddText("bind JOY5 +movedown\n");      // Crouch
+    Cbuf_AddText("bind JOY7 +movedown\n");      // Crouch
+    // Attack
+    Cbuf_AddText("bind TRIG_RIGHT +attack\n");
+    Cbuf_AddText("bind JOY3 weapnext\n");
+    Cbuf_AddText("bind JOY4 weapprev\n");
+    // Inventory actions
+    Cbuf_AddText("bind JOY14 inven\n");
+    Cbuf_AddText("bind JOY13 invprev\n");
+    Cbuf_AddText("bind JOY15 invnext\n");
+    Cbuf_AddText("bind JOY16 invdrop\n");
+    Cbuf_AddText("bind JOY8 invuse\n");
+    // Other
+    Cbuf_AddText("bind JOY11 \"cmd help\"\n");
+    Cbuf_AddText("joy_yawsensitivity 4.0\n");
+    Cbuf_AddText("joy_pitchsensitivity 4.0\n");
+#endif
 
     ControlsSetMenuItemValues();
 }

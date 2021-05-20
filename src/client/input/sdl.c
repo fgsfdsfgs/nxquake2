@@ -28,6 +28,9 @@
  */
 
 #include <SDL2/SDL.h>
+#ifdef __SWITCH__
+#include <switch.h>
+#endif
 
 #include "header/input.h"
 #include "../../client/header/keyboard.h"
@@ -1377,7 +1380,10 @@ IN_Init(void)
 	Cmd_AddCommand("+joyaltselector", IN_JoyAltSelectorDown);
 	Cmd_AddCommand("-joyaltselector", IN_JoyAltSelectorUp);
 
+#ifndef __SWITCH__
+	// this pops up the OSK immediately, so don't do it
 	SDL_StartTextInput();
+#endif
 
 	/* Joystick init */
 	if (!SDL_WasInit(SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC))
@@ -1515,5 +1521,26 @@ IN_Shutdown(void)
 		joystick = NULL;
 	}
 }
+
+#ifdef __SWITCH__
+void
+IN_OnScreenKeyboard(char *out, const int out_len)
+{
+	SwkbdConfig kbd;
+	char tmp_out[out_len + 1];
+	Result rc;
+	tmp_out[0] = 0;
+	rc = swkbdCreate(&kbd, 0);
+	if (R_SUCCEEDED(rc))
+	{
+		swkbdConfigMakePresetDefault(&kbd);
+		swkbdConfigSetInitialText(&kbd, out);
+		rc = swkbdShow(&kbd, tmp_out, out_len);
+		if (R_SUCCEEDED(rc))
+			strncpy(out, tmp_out, out_len); 
+		swkbdClose(&kbd);
+	}
+}
+#endif
 
 /* ------------------------------------------------------------------ */
