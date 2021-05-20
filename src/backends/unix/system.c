@@ -25,7 +25,6 @@
  */
 
 #include <dirent.h>
-#include <dlfcn.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -44,6 +43,14 @@
 #include <mach/mach.h>
 #endif
 
+#ifdef __SWITCH__
+#include <switch.h>
+#define SOLDER_LIBDL_COMPAT
+#include <solder.h>
+#else
+#include <dlfcn.h>
+#endif
+
 #include "../../common/header/common.h"
 #include "../../common/header/glob.h"
 
@@ -58,6 +65,33 @@ char cfgdir[MAX_OSPATH] = CFGDIR;
 
 // Console logfile
 extern FILE	*logfile;
+
+/* ================================================================ */
+
+#ifdef __SWITCH__
+
+void
+userAppInit(void)
+{
+	socketInitializeDefault();
+#ifdef DEBUG_NXLINK
+	nxlinkStdio();
+#endif
+	if (solder_init(0) < 0)
+	{
+		fprintf(stderr, "solder init failed: %s\n", dlerror());
+		abort();
+	}
+}
+
+void
+userAppExit(void)
+{
+	solder_quit();
+	socketExit();
+}
+
+#endif
 
 /* ================================================================ */
 
@@ -79,6 +113,17 @@ Sys_Error(char *error, ...)
 	vsnprintf(string, 1024, error, argptr);
 	va_end(argptr);
 	fprintf(stderr, "Error: %s\n", string);
+
+#ifdef __SWITCH__
+	{
+		FILE *f = fopen("fatal.log", "w");
+		if (f)
+		{
+			fprintf(f, "Error: %s\n", string);
+			fclose(f);
+		}
+	}
+#endif
 
 	exit(1);
 }
@@ -529,6 +574,10 @@ Sys_RemoveDir(const char *path)
 void
 Sys_Realpath(const char *in, char *out, size_t size)
 {
+#ifdef __SWITCH__
+	// no realpath
+	Q_strlcpy(out, in, size);
+#else
 	char *converted = realpath(in, NULL);
 
 	if (converted == NULL)
@@ -538,6 +587,7 @@ Sys_Realpath(const char *in, char *out, size_t size)
 
 	Q_strlcpy(out, converted, size);
 	free(converted);
+#endif
 }
 
 /* ================================================================ */

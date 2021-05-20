@@ -33,10 +33,26 @@
 #include <netdb.h>
 #include <sys/param.h>
 #include <sys/ioctl.h>
-#include <sys/uio.h>
 #include <errno.h>
 #include <arpa/inet.h>
 #include <net/if.h>
+
+#ifdef __SWITCH__
+// don't know why we don't have this defined
+struct ipv6_mreq
+{
+		struct in6_addr ipv6mr_multiaddr;   
+		unsigned        ipv6mr_interface;   
+};
+// we have only one interface
+static inline unsigned int
+if_nametoindex(const char *name)
+{
+	return 0;
+}
+#else
+#include <sys/uio.h>
+#endif
 
 netadr_t net_local_adr;
 

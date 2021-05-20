@@ -11,6 +11,11 @@ project(yquake2)
 # Cmake module search path.
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/stuff/cmake/modules ${CMAKE_MODULE_PATH})
 
+# provide backwards compatibility with devkitpro-pkgbuild-helpers
+if(NSWITCH)
+	set(NINTENDO_SWITCH true)
+endif()
+
 if(YQUAKE2LIBS)
 	if(CMAKE_CROSSCOMPILING)
 		set(CMAKE_FIND_ROOT_PATH ${YQUAKE2LIBS})
@@ -60,6 +65,10 @@ set(yquake2OpenGLLinkerFlags)
 set(yquake2VulkanLinkerFlags)
 set(yquake2SDLLinkerFlags)
 set(yquake2ZLibLinkerFlags)
+set(yquake2LibFlags)
+set(yquake2GL1LinkerFlags)
+set(yquake2GL3LinkerFlags)
+set(yquake2SOFTLinkerFlags)
 
 # Set directory locations (allowing us to move directories easily)
 set(SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
@@ -91,6 +100,17 @@ add_definitions(-DNOUNCRYPT)
 
 if(NOT CMAKE_SYSTEM_NAME MATCHES "Linux" OR NOT CMAKE_SYSTEM_NAME MATCHES "Windows")
 	add_definitions(-DIOAPI_NO_64)
+endif()
+
+if(NINTENDO_SWITCH)
+	# add GL in advance (EGL will be added by the SDL2 deps anyway)
+	set(OPENGL_opengl_LIBRARY "${DEVKITPRO}/portlibs/switch/lib/libglapi.a;${DEVKITPRO}/portlibs/switch/lib/libdrm_nouveau.a")
+	set(OPENGL_glx_LIBRARY "${DEVKITPRO}/portlibs/switch/lib/libEGL.a")
+	set(VULKAN_SUPPORT OFF) # not yet
+	# enable "fake" dynamic linking
+	include("${DEVKITPRO}/portlibs/switch/share/SolderShim.cmake")
+	# enable nxlink
+	add_definitions(-DDEBUG_NXLINK)
 endif()
 
 # Required libraries to build the different components of the binaries. Find
@@ -134,6 +154,10 @@ endif()
 if (${CURL_SUPPORT})
 	find_package(CURL REQUIRED)
 	add_definitions(-DUSE_CURL)
+	if(NINTENDO_SWITCH)
+		add_definitions(-DCURL_STATIC)
+		list(APPEND yquake2ClientLinkerFlags "-lcurl -lz")
+	endif()
 endif()
 
 # OpenAL support.
@@ -150,6 +174,8 @@ if(${OPENAL_SUPPORT})
 			add_definitions(-DUSE_OPENAL -DDEFAULT_OPENAL_DRIVER="libopenal.dylib")
 		elseif((${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD") OR (${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD"))
 			add_definitions(-DUSE_OPENAL -DDEFAULT_OPENAL_DRIVER="libopenal.so")
+		elseif(NINTENDO_SWITCH)
+			add_definitions(-DUSE_OPENAL -DDEFAULT_OPENAL_DRIVER="" -DOPENAL_STATIC)
 		else()
 			add_definitions(-DUSE_OPENAL -DDEFAULT_OPENAL_DRIVER="libopenal.so.1")
 		endif()
@@ -172,8 +198,19 @@ endif()
 
 if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
-		list(APPEND yquake2LinkerFlags "-Wl,--no-undefined")
+		if(NOT NINTENDO_SWITCH)
+			list(APPEND yquake2LinkerFlags "-Wl,--no-undefined")
+		endif()
 	endif()
+endif()
+
+if(NINTENDO_SWITCH)
+	# still want undefined ref warnings on the main executable
+	list(APPEND yquake2ClientLinkerFlags "-Wl,--no-undefined")
+	# need to hide mesa's private symbols, otherwise something gets linked in that causes it to crash
+	list(APPEND yquake2ClientLinkerFlags "-Wl,--exclude-libs=libglapi.a -Wl,--exclude-libs=libdrm_nouveau.a")
+	# SDL2 depends on GL, GL depends on libnx and libstdc++, libnx depends on libm
+	list(APPEND yquake2SDLLinkerFlags "-lEGL -lglapi -ldrm_nouveau -lstdc++ -lnx -lm")
 endif()
 
 # With all of those libraries and user defined paths
@@ -214,6 +251,14 @@ set(Backends-Unix-Source
 	${BACKENDS_SRC_DIR}/unix/shared/hunk.c
 	)
 
+set(Backends-NX-Source
+	${BACKENDS_SRC_DIR}/unix/main.c
+	${BACKENDS_SRC_DIR}/unix/network.c
+	${BACKENDS_SRC_DIR}/unix/signalhandler.c
+	${BACKENDS_SRC_DIR}/unix/system.c
+	${BACKENDS_SRC_DIR}/nx/shared/hunk.c
+	)
+
 set(Backends-Windows-Source
 	${BACKENDS_SRC_DIR}/windows/icon.rc
 	${BACKENDS_SRC_DIR}/windows/main.c
@@ -234,10 +279,17 @@ set(REF-Unix-Source
 	${BACKENDS_SRC_DIR}/unix/shared/hunk.c
 	)
 
+set(REF-NX-Source
+	${BACKENDS_SRC_DIR}/nx/shared/hunk.c
+	)
+
 # Set the nessesary platform specific source
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	set(Platform-Specific-Source ${Backends-Windows-Source} ${Backends-Windows-Header})
 	set(REF-Platform-Specific-Source ${REF-Windows-Source})
+elseif(NINTENDO_SWITCH)
+	set(Platform-Specific-Source ${Backends-NX-Source})
+	set(REF-Platform-Specific-Source ${REF-NX-Source})
 else()
 	set(Platform-Specific-Source ${Backends-Unix-Source})
 	set(REF-Platform-Specific-Source ${REF-Unix-Source})
@@ -629,6 +681,17 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	)
 endif()
 
+# filter out some stuff that gets linked in from the main executable on Switch
+if(NINTENDO_SWITCH)
+	list(APPEND yquake2LibFlags ${yquake2LinkerFlags})
+	list(REMOVE_ITEM yquake2LibFlags "-lsolder" "-lsolderd")
+else()
+	list(APPEND yquake2LibFlags ${yquake2LinkerFlags})
+	list(APPEND yquake2GL1LinkerFlags ${yquake2OpenGLLinkerFlags} ${yquake2SDLLinkerFlags})
+	list(APPEND yquake2GL3LinkerFlags ${yquake2SDLLinkerFlags})
+	list(APPEND yquake2SOFTLinkerFlags ${yquake2SDLLinkerFlags})
+endif()
+
 # Main Quake 2 executable
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
@@ -656,16 +719,18 @@ else()
 endif()
 
 # Quake 2 Dedicated Server
-add_executable(q2ded ${Server-Source} ${Server-Header} ${Platform-Specific-Source}
-		${Backends-Generic-Source})
-set_target_properties(q2ded PROPERTIES
-	COMPILE_DEFINITIONS "DEDICATED_ONLY"
-	RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/release
-	)
-if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	target_link_libraries(q2ded ${yquake2LinkerFlags} ${yquake2SDLLinkerFlags} ${yquake2ZLibLinkerFlags} ws2_32 winmm)
-else()
-	target_link_libraries(q2ded ${yquake2LinkerFlags} ${yquake2ServerLinkerFlags} ${yquake2ZLibLinkerFlags})
+if(NOT CMAKE_CROSSCOMPILING)
+	add_executable(q2ded ${Server-Source} ${Server-Header} ${Platform-Specific-Source}
+			${Backends-Generic-Source})
+	set_target_properties(q2ded PROPERTIES
+		COMPILE_DEFINITIONS "DEDICATED_ONLY"
+		RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/release
+		)
+	if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+		target_link_libraries(q2ded ${yquake2LinkerFlags} ${yquake2SDLLinkerFlags} ${yquake2ZLibLinkerFlags} ws2_32 winmm)
+	else()
+		target_link_libraries(q2ded ${yquake2LinkerFlags} ${yquake2ServerLinkerFlags} ${yquake2ZLibLinkerFlags})
+	endif()
 endif()
 
 # Build the game dynamic library
@@ -676,7 +741,7 @@ set_target_properties(game PROPERTIES
 		RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/release/baseq2
 		SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX}
 		)
-target_link_libraries(game ${yquake2LinkerFlags})
+target_link_libraries(game ${yquake2LibFlags})
 
 # Build the GL1 dynamic library
 add_library(ref_gl1 MODULE ${GL1-Source} ${GL1-Header} ${REF-Platform-Specific-Source})
@@ -686,7 +751,7 @@ set_target_properties(ref_gl1 PROPERTIES
 		RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/release
 		SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX}
 		)
-target_link_libraries(ref_gl1 ${yquake2LinkerFlags} ${yquake2OpenGLLinkerFlags} ${yquake2SDLLinkerFlags})
+target_link_libraries(ref_gl1 ${yquake2LibFlags} ${yquake2GL1LinkerFlags})
 
 # Build the GL3 dynamic library
 add_library(ref_gl3 MODULE ${GL3-Source} ${GL3-Header} ${REF-Platform-Specific-Source})
@@ -696,7 +761,7 @@ set_target_properties(ref_gl3 PROPERTIES
 		RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/release
 		SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX}
 		)
-target_link_libraries(ref_gl3 ${yquake2LinkerFlags} ${yquake2SDLLinkerFlags})
+target_link_libraries(ref_gl3 ${yquake2LibFlags} ${yquake2GL3LinkerFlags})
 
 # Build the soft renderer dynamic library
 add_library(ref_soft MODULE ${SOFT-Source} ${SOFT-Header} ${REF-Platform-Specific-Source})
@@ -706,7 +771,7 @@ set_target_properties(ref_soft PROPERTIES
 		RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/release
 		SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX}
 		)
-target_link_libraries(ref_soft ${yquake2LinkerFlags} ${yquake2SDLLinkerFlags})
+target_link_libraries(ref_soft ${yquake2LibFlags} ${yquake2SOFTLinkerFlags})
 
 if(${VULKAN_SUPPORT})
     # Build the vk renderer dynamic library
@@ -717,5 +782,13 @@ if(${VULKAN_SUPPORT})
 		RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/release
 		SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX}
 		)
-    target_link_libraries(ref_vk ${yquake2LinkerFlags} ${yquake2VulkanLinkerFlags} ${yquake2SDLLinkerFlags})
+    target_link_libraries(ref_vk ${yquake2LibFlags} ${yquake2VulkanLinkerFlags} ${yquake2SDLLinkerFlags})
+endif()
+
+if(NINTENDO_SWITCH)
+	add_custom_command(
+		TARGET quake2 POST_BUILD
+		COMMAND nacptool --create "${CMAKE_PROJECT_NAME}" \"\" \"\" "nxquake2.nacp"
+		COMMAND elf2nro "${CMAKE_BINARY_DIR}/release/quake2" "${CMAKE_BINARY_DIR}/release/nxquake2.nro" --nacp=nxquake2.nacp
+	)
 endif()

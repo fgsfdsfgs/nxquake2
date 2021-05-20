@@ -74,11 +74,16 @@ main(int argc, char **argv)
 						return 1;
 					}
 
-					if(realpath(argv[i + 1], datadir) == NULL)
+#ifndef __SWITCH__
+					if (realpath(argv[i + 1], datadir) == NULL)
 					{
 						printf("realpath(datadir) failed: %s\n", strerror(errno));
 						datadir[0] = '\0';
 					}
+#else
+					// no realpath() on switch
+					Q_strlcpy(datadir, argv[i + 1], sizeof(datadir));
+#endif
 				}
 				else
 				{
@@ -110,7 +115,11 @@ main(int argc, char **argv)
 		}
 	}
 
-#ifndef __HAIKU__
+#if defined(__SWITCH__)
+	is_portable = true; // always portable
+#endif
+
+#if !defined(__HAIKU__) && !defined(__SWITCH__)
 	/* Prevent running Quake II as root. Only very mad
 	   minded or stupid people even think about it. :) */
 	if (getuid() == 0)
@@ -123,6 +132,7 @@ main(int argc, char **argv)
 	}
 #endif
 
+#if !defined(__SWITCH__)
 	// Enforce the real UID to prevent setuid crap
 	if (getuid() != geteuid())
 	{
@@ -133,6 +143,7 @@ main(int argc, char **argv)
 
 		return 1;
 	}
+#endif
 
 	// enforce C locale
 	setenv("LC_ALL", "C", 1);
