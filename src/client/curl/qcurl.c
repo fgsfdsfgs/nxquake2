@@ -73,6 +73,7 @@ qboolean qcurlInit(void)
 
 	assert(!qcurlInitialized && "cURL already initialized?!");
 
+#ifndef CURL_STATIC
 	// Most systems have only one distinct name for the
 	// libcurl, loading that one will be successfull in
 	// at least 99% of all cases. But Linux, the mother
@@ -141,25 +142,29 @@ qboolean qcurlInit(void)
 
 	// libcurl loaded sucessfully, connect the pointers.
 	#define CONCURL(var, sym) do { \
-		var = Sys_GetProcAddress(curlhandle, sym); \
+		var = Sys_GetProcAddress(curlhandle, #sym); \
 		if (!var) goto error; \
 	} while(0)
-	
-	CONCURL(qcurl_easy_cleanup, "curl_easy_cleanup");
-	CONCURL(qcurl_easy_init, "curl_easy_init");
-	CONCURL(qcurl_easy_getinfo, "curl_easy_getinfo");
-	CONCURL(qcurl_easy_setopt, "curl_easy_setopt");
-	CONCURL(qcurl_easy_strerror, "curl_easy_strerror");
+#else
+	cl_libcurl = Cvar_Get("cl_libcurl", "", CVAR_ARCHIVE);
+	#define CONCURL(var, sym) var = (void *)sym;
+#endif
 
-	CONCURL(qcurl_global_cleanup, "curl_global_cleanup");
-	CONCURL(qcurl_global_init, "curl_global_init");
+	CONCURL(qcurl_easy_cleanup, curl_easy_cleanup);
+	CONCURL(qcurl_easy_init, curl_easy_init);
+	CONCURL(qcurl_easy_getinfo, curl_easy_getinfo);
+	CONCURL(qcurl_easy_setopt, curl_easy_setopt);
+	CONCURL(qcurl_easy_strerror, curl_easy_strerror);
 
-	CONCURL(qcurl_multi_add_handle, "curl_multi_add_handle");
-	CONCURL(qcurl_multi_cleanup, "curl_multi_cleanup");
-	CONCURL(qcurl_multi_info_read, "curl_multi_info_read");
-	CONCURL(qcurl_multi_init, "curl_multi_init");
-	CONCURL(qcurl_multi_perform, "curl_multi_perform");
-	CONCURL(qcurl_multi_remove_handle, "curl_multi_remove_handle");
+	CONCURL(qcurl_global_cleanup, curl_global_cleanup);
+	CONCURL(qcurl_global_init, curl_global_init);
+
+	CONCURL(qcurl_multi_add_handle, curl_multi_add_handle);
+	CONCURL(qcurl_multi_cleanup, curl_multi_cleanup);
+	CONCURL(qcurl_multi_info_read, curl_multi_info_read);
+	CONCURL(qcurl_multi_init, curl_multi_init);
+	CONCURL(qcurl_multi_perform, curl_multi_perform);
+	CONCURL(qcurl_multi_remove_handle, curl_multi_remove_handle);
 
 	#undef CONCURL
 

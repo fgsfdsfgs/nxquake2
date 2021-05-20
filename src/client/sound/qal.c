@@ -400,6 +400,7 @@ QAL_Init()
 
 	Com_Printf("Loading library: %s\n", al_driver->string);
 
+#ifndef OPENAL_STATIC
 	/* Load the library */
 	Sys_LoadLibrary(al_driver->string, NULL, &handle);
 
@@ -410,6 +411,9 @@ QAL_Init()
 	}
 
 	#define ALSYMBOL(handle, sym) Sys_GetProcAddress(handle, #sym)
+#else
+	#define ALSYMBOL(handle, sym) sym
+#endif
 
 	/* Connect function pointers to management functions */
 	qalcCreateContext = ALSYMBOL(handle, alcCreateContext);
