@@ -414,7 +414,18 @@ Key_Console(int key)
 		}
 	}
 
-	if ((key == K_ENTER) || (key == K_KP_ENTER))
+#ifdef __SWITCH__
+	if (key == K_JOY3)
+	{
+		/* input command using the OSK */
+		const int maxlen = sizeof(key_lines[edit_line]) - 4;
+		Sys_NX_OnScreenKeyboard(key_lines[edit_line] + 1, maxlen);
+		key_linepos = 1 + strnlen(key_lines[edit_line] + 1, maxlen);
+		return;
+	}
+#endif
+
+	if ((key == K_ENTER) || (key == K_KP_ENTER) || (key == K_JOY1))
 	{
 		/* slash text are commands, else chat */
 		if ((key_lines[edit_line][1] == '\\') ||
@@ -443,7 +454,7 @@ Key_Console(int key)
 		return;
 	}
 
-	if (key == K_TAB)
+	if ((key == K_TAB) || (key == K_JOY11))
 	{
 		/* command completion */
 		CompleteCommand();
@@ -453,7 +464,7 @@ Key_Console(int key)
 	}
 
 	if ((key == K_BACKSPACE) || (key == K_LEFTARROW) ||
-		(key == K_KP_LEFTARROW) ||
+		(key == K_KP_LEFTARROW) || (key == K_JOY13) || (key == K_JOY2) ||
 		((key == 'h') && (keydown[K_CTRL])))
 	{
 		if (key_linepos > 1)
@@ -473,7 +484,7 @@ Key_Console(int key)
 	}
 
 	if ((key == K_UPARROW) || (key == K_KP_UPARROW) ||
-		((key == 'p') && keydown[K_CTRL]))
+		((key == 'p') && keydown[K_CTRL]) || (key == K_JOY14))
 	{
 		do
 		{
@@ -493,7 +504,7 @@ Key_Console(int key)
 	}
 
 	if ((key == K_DOWNARROW) || (key == K_KP_DOWNARROW) ||
-		((key == 'n') && keydown[K_CTRL]))
+		((key == 'n') && keydown[K_CTRL]) || (key == K_JOY16))
 	{
 		if (history_line == edit_line)
 		{
@@ -522,14 +533,14 @@ Key_Console(int key)
 	}
 
 	if ((key == K_PGUP) || (key == K_KP_PGUP) || (key == K_MWHEELUP) ||
-		(key == K_MOUSE4))
+		(key == K_MOUSE4) || (key == K_TRIG_LEFT))
 	{
 		con.display -= 2;
 		return;
 	}
 
 	if ((key == K_PGDN) || (key == K_KP_PGDN) || (key == K_MWHEELDOWN) ||
-		(key == K_MOUSE5))
+		(key == K_MOUSE5) || (key == K_TRIG_RIGHT))
 	{
 		con.display += 2;
 
@@ -614,7 +625,7 @@ Key_Message(int key)
 {
 	char last;
 
-	if ((key == K_ENTER) || (key == K_KP_ENTER))
+	if ((key == K_ENTER) || (key == K_KP_ENTER) || (key == K_JOY1))
 	{
 		if (chat_team)
 		{
@@ -672,7 +683,7 @@ Key_Message(int key)
 		return;
 	}
 
-	if (key == K_LEFTARROW)
+	if (key == K_LEFTARROW || key == K_JOY13)
 	{
 		if (chat_cursorpos > 0)
 		{
@@ -694,7 +705,7 @@ Key_Message(int key)
 		return;
 	}
 
-	if (key == K_RIGHTARROW)
+	if (key == K_RIGHTARROW || key == K_JOY15)
 	{
 		if (chat_buffer[chat_cursorpos])
 		{
@@ -1107,6 +1118,24 @@ Key_Init(void)
 	consolekeys[K_MWHEELDOWN] = true;
 	consolekeys[K_MOUSE4] = true;
 	consolekeys[K_MOUSE5] = true;
+
+#ifdef __SWITCH__
+	// A to enter command, B to clear, + to autocomplete
+	consolekeys[K_JOY1] = true;
+	consolekeys[K_JOY2] = true;
+	// Y to open OSK
+	consolekeys[K_JOY3] = true;
+	// + to autocomplete
+	consolekeys[K_JOY11] = true;
+	// dpad to scroll cmd history
+	consolekeys[K_JOY13] = true;
+	consolekeys[K_JOY14] = true;
+	consolekeys[K_JOY15] = true;
+	consolekeys[K_JOY16] = true;
+	// LT/RT to scroll console
+	consolekeys[K_TRIG_LEFT] = true;
+	consolekeys[K_TRIG_RIGHT] = true;
+#endif
 
 	consolekeys['`'] = false;
 	consolekeys['~'] = false;
