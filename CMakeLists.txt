@@ -109,8 +109,10 @@ if(NINTENDO_SWITCH)
 	set(VULKAN_SUPPORT OFF) # not yet
 	# enable "fake" dynamic linking
 	include("${DEVKITPRO}/portlibs/switch/share/SolderShim.cmake")
-	# enable nxlink
-	add_definitions(-DDEBUG_NXLINK)
+	# enable nxlink if debugging
+	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+		add_definitions(-DDEBUG_NXLINK)
+	endif()
 	# set some metadata fields
 	set(NX_APP_TITLE "NXQuake2")
 	set(NX_APP_AUTHOR "Yamagi, fgsfds")
