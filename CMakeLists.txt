@@ -111,6 +111,10 @@ if(NINTENDO_SWITCH)
 	include("${DEVKITPRO}/portlibs/switch/share/SolderShim.cmake")
 	# enable nxlink
 	add_definitions(-DDEBUG_NXLINK)
+	# set some metadata fields
+	set(NX_APP_TITLE "NXQuake2")
+	set(NX_APP_AUTHOR "Yamagi, fgsfds")
+	set(NX_APP_VERSION "0.5.0 / 7.45+")
 endif()
 
 # Required libraries to build the different components of the binaries. Find
@@ -789,7 +793,11 @@ endif()
 if(NINTENDO_SWITCH)
 	add_custom_command(
 		TARGET quake2 POST_BUILD
-		COMMAND nacptool --create "${CMAKE_PROJECT_NAME}" \"\" \"\" "nxquake2.nacp"
-		COMMAND elf2nro "${CMAKE_BINARY_DIR}/release/quake2" "${CMAKE_BINARY_DIR}/release/nxquake2.nro" --nacp=nxquake2.nacp
+		COMMAND nacptool --create "${NX_APP_TITLE}" "${NX_APP_AUTHOR}" "${NX_APP_VERSION}" "nxquake2.nacp"
+		COMMAND elf2nro
+			"${CMAKE_BINARY_DIR}/release/quake2"
+			"${CMAKE_BINARY_DIR}/release/nxquake2.nro"
+			--nacp=nxquake2.nacp
+			--icon="${CMAKE_SOURCE_DIR}/icon.jpg"
 	)
 endif()
