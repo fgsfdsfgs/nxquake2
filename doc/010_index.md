@@ -25,3 +25,4 @@ The documentation is split into several documents:
 * [Packaging Guide For Maintainers](070_packaging.md)
 * [Contributing Guide](080_contributing.md)
 * [File Listings](090_filelists.md)
+* [Nintendo Switch version](990_switch.md)
