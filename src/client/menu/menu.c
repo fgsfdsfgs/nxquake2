@@ -1363,8 +1363,8 @@ ControlsResetDefaultsFunc(void *unused)
     Cbuf_AddText("bind JOY8 invuse\n");
     // Other
     Cbuf_AddText("bind JOY11 \"cmd help\"\n");
-    Cbuf_AddText("joy_yawsensitivity 4.0\n");
-    Cbuf_AddText("joy_pitchsensitivity 4.0\n");
+    Cbuf_AddText("joy_yawsensitivity 1.5\n");
+    Cbuf_AddText("joy_pitchsensitivity 1.5\n");
 #endif
 
     ControlsSetMenuItemValues();
