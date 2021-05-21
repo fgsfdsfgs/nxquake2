@@ -847,7 +847,8 @@ char *bindnames[][2] =
     {"invprev", "prev item"},
     {"invnext", "next item"},
     {"cmd help", "help computer"},
-    {"+joyaltselector", "enable alt joy keys"}
+    {"+joyaltselector", "enable alt joy keys"},
+    {"+fastturn", "faster turn"}
 };
 #define NUM_BINDNAMES (sizeof bindnames / sizeof bindnames[0])
 

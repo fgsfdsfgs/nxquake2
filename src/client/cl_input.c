@@ -55,7 +55,7 @@ unsigned old_sys_frame_time;
  *   +mlook src time
  */
 
-kbutton_t in_klook;
+kbutton_t in_klook, in_fastturn;
 kbutton_t in_left, in_right, in_forward, in_back;
 kbutton_t in_lookup, in_lookdown, in_moveleft, in_moveright;
 kbutton_t in_strafe, in_speed, in_use, in_attack;
@@ -182,6 +182,18 @@ KeyUp(kbutton_t *b)
 
 	b->state &= ~1; /* now up */
 	b->state |= 4; /* impulse up */
+}
+
+void
+IN_FastTurnDown(void)
+{
+	KeyDown(&in_fastturn);
+}
+
+void
+IN_FastTurnUp(void)
+{
+	KeyUp(&in_fastturn);
 }
 
 void
@@ -627,6 +639,8 @@ CL_InitInput(void)
 	Cmd_AddCommand("impulse", IN_Impulse);
 	Cmd_AddCommand("+klook", IN_KLookDown);
 	Cmd_AddCommand("-klook", IN_KLookUp);
+	Cmd_AddCommand("+fastturn", IN_FastTurnDown);
+	Cmd_AddCommand("-fastturn", IN_FastTurnUp);
 
 	cl_nodelta = Cvar_Get("cl_nodelta", "0", 0);
 }

@@ -692,6 +692,7 @@ IN_Update(void)
 
 				if (cls.key_dest == key_game && (int) cl_paused->value == 0)
 				{
+					const float lookmod = (CL_KeyState(&in_fastturn) ? 2.0f : 1.0f);
 					if (strcmp(direction_type, "sidemove") == 0)
 					{
 						joystick_sidemove = axis_value * joy_sidesensitivity->value;
@@ -708,12 +709,12 @@ IN_Update(void)
 					}
 					else if (strcmp(direction_type, "yaw") == 0)
 					{
-						joystick_yaw = axis_value * joy_yawsensitivity->value;
+						joystick_yaw = axis_value * joy_yawsensitivity->value * lookmod;
 						joystick_yaw *= cl_yawspeed->value;
 					}
 					else if (strcmp(direction_type, "pitch") == 0)
 					{
-						joystick_pitch = axis_value * joy_pitchsensitivity->value;
+						joystick_pitch = axis_value * joy_pitchsensitivity->value * lookmod;
 						joystick_pitch *= cl_pitchspeed->value;
 					}
 					else if (strcmp(direction_type, "updown") == 0)
