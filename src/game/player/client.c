@@ -848,7 +848,11 @@ void
 player_die(edict_t *self, edict_t *inflictor, edict_t *attacker,
 		int damage, vec3_t point /* unused */)
 {
-	int n;
+	int n, amt;
+	qboolean keep_ammo;
+	qboolean keep_items;
+	qboolean keep_weapons;
+	qboolean keep_armor;
 
 	if (!self || !inflictor || !attacker)
 	{
@@ -885,14 +889,52 @@ player_die(edict_t *self, edict_t *inflictor, edict_t *attacker,
 			Cmd_Help_f(self); /* show scores */
 		}
 
+		if (coop->value)
+		{
+			keep_ammo = (coop_keep_ammo->value > 0);
+			keep_weapons = (coop_keep_weapons->value > 0);
+			keep_items = (coop_keep_powerups->value > 0);
+			keep_armor = (coop_keep_armor->value > 0);
+		}
+		else
+		{
+			keep_ammo = keep_weapons = keep_items = keep_armor = false;
+		}
+
 		/* clear inventory: this is kind of ugly, but
 		   it's how we want to handle keys in coop */
 		for (n = 0; n < game.num_items; n++)
 		{
-			if (coop->value && itemlist[n].flags & IT_KEY)
+			if (coop->value)
 			{
-				self->client->resp.coop_respawn.inventory[n] =
-					self->client->pers.inventory[n];
+				amt = -1;
+				if (itemlist[n].flags & IT_KEY)
+				{
+					amt = self->client->pers.inventory[n];
+				}
+				else if (keep_ammo && (itemlist[n].flags & IT_AMMO))
+				{
+					amt = self->client->pers.inventory[n] / coop_keep_ammo->value;
+				}
+				else if (keep_weapons && (itemlist[n].flags & IT_WEAPON))
+				{
+					amt = self->client->pers.inventory[n];
+				}
+				else if (keep_armor && (itemlist[n].flags & IT_ARMOR))
+				{
+					amt = self->client->pers.inventory[n] / coop_keep_armor->value;
+				}
+				else if (keep_items && (itemlist[n].flags & IT_POWERUP))
+				{
+					/* don't subtract from rebreathers and other useful things */
+					amt = (itemlist[n].flags & IT_STAY_COOP) ?
+						self->client->pers.inventory[n] :
+						self->client->pers.inventory[n] / coop_keep_powerups->value;
+				}
+				if (amt >= 0)
+				{
+					self->client->resp.coop_respawn.inventory[n] = amt;
+				}
 			}
 
 			self->client->pers.inventory[n] = 0;

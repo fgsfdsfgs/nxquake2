@@ -199,12 +199,6 @@ Pickup_Weapon(edict_t *ent, edict_t *other)
 
 	if (coop->value)
 	{
-		if (coop_keep_weapons->value)
-		{
-			/* also save the new weapon in the coop respawn data */
-			other->client->resp.coop_respawn.inventory[index]++;
-		}
-
 		if (coop_broadcast_weapons->value)
 		{
 			for (i = 0; i < game.maxclients; ++i)
@@ -213,10 +207,6 @@ Pickup_Weapon(edict_t *ent, edict_t *other)
 				if (player->inuse && player->client && !player->client->resp.spectator && !player->client->pers.inventory[index])
 				{
 					player->client->pers.inventory[index]++;
-					if (coop_keep_weapons->value)
-					{
-						player->client->resp.coop_respawn.inventory[index]++;
-					}
 					/* give the broadcast receiver some ammo since this is their first pickup */
 					if ((int)dmflags->value & DF_INFINITE_AMMO)
 					{

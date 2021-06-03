@@ -247,6 +247,9 @@ InitGame(void)
 	coop_min_health = gi.cvar("coop_min_health", "25", CVAR_ARCHIVE);
 	coop_broadcast_weapons = gi.cvar("coop_broadcast_weapons", "1", CVAR_ARCHIVE);
 	coop_keep_weapons = gi.cvar("coop_keep_weapons", "1", CVAR_ARCHIVE);
+	coop_keep_ammo = gi.cvar("coop_keep_ammo", "2", CVAR_ARCHIVE);
+	coop_keep_powerups = gi.cvar("coop_keep_powerups", "2", CVAR_ARCHIVE);
+	coop_keep_armor = gi.cvar("coop_keep_armor", "2", CVAR_ARCHIVE);
 	coop_exit_cooldown = gi.cvar("coop_exit_cooldown", "5.0", CVAR_ARCHIVE);
 	coop_allow_warp = gi.cvar("coop_allow_warp", "1", CVAR_ARCHIVE);
 	coop_respawn_in_place = gi.cvar("coop_respawn_in_place", "1", CVAR_ARCHIVE);
