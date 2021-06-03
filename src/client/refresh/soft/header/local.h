@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <string.h>
 #include <stdarg.h>
 
-#define REF_VERSION	"Yamagi Quake II Software Refresher"
+#define REF_VERSION	"SOFT 0.01"
 
 // up / down
 #define PITCH	0
@@ -63,9 +63,11 @@ typedef struct image_s
 	char		name[MAX_QPATH];	// game path, including extension
 	imagetype_t	type;
 	int		width, height;
+	int		asset_width, asset_height;	// asset texture size
 	qboolean	transparent;		// true if any 255 pixels in image
 	int		registration_sequence;  // 0 = free
 	byte		*pixels[NUM_MIPS];	// mip levels
+	int		mip_levels; // count of mip levels
 } image_t;
 
 
@@ -160,8 +162,6 @@ extern oldrefdef_t	r_refdef;
 #define ALIAS_BOTTOM_CLIP	0x0008
 #define ALIAS_Z_CLIP		0x0010
 #define ALIAS_XY_CLIP_MASK	0x000F
-
-#define SURFCACHE_SIZE_AT_320X240	1024*768
 
 #define BMODEL_FULLY_CLIPPED	0x10 // value returned by R_BmodelCheckBBox ()
 				     //  if bbox is trivially rejected
@@ -375,6 +375,10 @@ extern zvalue_t	*d_pzbuffer;
 extern int	d_minmip;
 extern float	d_scalemip[NUM_MIPS-1];
 
+extern int vid_buffer_height;
+extern int vid_buffer_width;
+
+
 //===================================================================
 
 extern int	cachewidth;
@@ -420,14 +424,17 @@ extern cvar_t	*sw_stipplealpha;
 extern cvar_t	*sw_surfcacheoverride;
 extern cvar_t	*sw_waterwarp;
 extern cvar_t	*sw_gunzposition;
+extern cvar_t	*sw_retexturing;
 
 extern cvar_t	*r_fullbright;
 extern cvar_t	*r_lefthand;
 extern cvar_t	*r_gunfov;
+extern cvar_t	*r_farsee;
 extern cvar_t	*r_drawworld;
 extern cvar_t	*r_lerpmodels;
 extern cvar_t	*r_lightlevel;
 extern cvar_t	*r_modulate;
+extern cvar_t	*r_fixsurfsky;
 
 
 extern clipplane_t	view_clipplanes[4];
@@ -440,7 +447,7 @@ void R_RenderWorld(void);
 
 //=============================================================================
 
-extern mplane_t        screenedge[4];
+extern cplane_t        screenedge[4];
 
 extern vec3_t  r_origin;
 
@@ -578,6 +585,7 @@ void LoadPCX (char *filename, byte **pic, byte **palette, int *width, int *heigh
 void	R_InitImages(void);
 void	R_ShutdownImages(void);
 image_t	*R_FindImage(char *name, imagetype_t type);
+byte	*Get_BestImageSize(const image_t *image, int *req_width, int *req_height);
 void	R_FreeUnusedImages(void);
 
 void R_InitSkyBox(void);

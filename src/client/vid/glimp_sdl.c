@@ -89,6 +89,15 @@ CreateSDLWindow(int flags, int w, int h)
 		last_position_x = last_position_y = SDL_WINDOWPOS_UNDEFINED_DISPLAY((int)vid_displayindex->value);
 	}
 
+	/* Force the window to minimize when focus is lost. This was the
+	 * default behavior until SDL 2.0.12 and changed with 2.0.14.
+	 * The windows staying maximized has some odd implications for
+	 * window ordering under Windows and some X11 window managers
+	 * like kwin. See:
+	 *  * https://github.com/libsdl-org/SDL/issues/4039
+	 *  * https://github.com/libsdl-org/SDL/issues/3656 */
+	SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "1");
+
 	window = SDL_CreateWindow("Yamagi Quake II", last_position_x, last_position_y, w, h, flags);
 
 	if (window)
@@ -104,14 +113,17 @@ CreateSDLWindow(int flags, int w, int h)
 		   https://bugzilla.libsdl.org/show_bug.cgi?id=4700 */
 		SDL_DisplayMode real_mode;
 
-		if (SDL_GetWindowDisplayMode(window, &real_mode) != 0)
+		if ((flags & (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP)) == SDL_WINDOW_FULLSCREEN)
 		{
-			SDL_DestroyWindow(window);
-			window = NULL;
+			if (SDL_GetWindowDisplayMode(window, &real_mode) != 0)
+			{
+				SDL_DestroyWindow(window);
+				window = NULL;
 
-			Com_Printf("Can't get display mode: %s\n", SDL_GetError());
+				Com_Printf("Can't get display mode: %s\n", SDL_GetError());
 
-			return false;
+				return false;
+			}
 		}
 
 		/* SDL_WINDOW_FULLSCREEN_DESKTOP implies SDL_WINDOW_FULLSCREEN! */
@@ -159,7 +171,7 @@ CreateSDLWindow(int flags, int w, int h)
 				SDL_DestroyWindow(window);
 				window = NULL;
 
-				Com_Printf("Can't get display mode: %s\n", SDL_GetError());
+				Com_Printf("Still in wrong display mode: %ix%i instead of %ix%i\n", real_mode.w, real_mode.h, w, h);
 
 				return false;
 			}
@@ -216,11 +228,11 @@ GetFullscreenType()
 {
 	if (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP)
 	{
-		return 1;
+		return 2;
 	}
 	else if (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN)
 	{
-		return 2;
+		return 1;
 	}
 	else
 	{
@@ -402,15 +414,17 @@ GLimp_Init(void)
 		SDL_version version;
 
 		SDL_GetVersion(&version);
+		Com_Printf("-------- vid initialization --------\n");
 		Com_Printf("SDL version is: %i.%i.%i\n", (int)version.major, (int)version.minor, (int)version.patch);
 		Com_Printf("SDL video driver is \"%s\".\n", SDL_GetCurrentVideoDriver());
 
 		num_displays = SDL_GetNumVideoDisplays();
 		InitDisplayIndices();
 		ClampDisplayIndexCvar();
-		Com_Printf("SDL didplay modes:\n");
+		Com_Printf("SDL display modes:\n");
 
 		PrintDisplayModes();
+		Com_Printf("------------------------------------\n\n");
 	}
 
 	return true;
@@ -452,11 +466,11 @@ GLimp_InitGraphics(int fullscreen, int *pwidth, int *pheight)
 
 	if (fullscreen == 1)
 	{
-		fs_flag = SDL_WINDOW_FULLSCREEN_DESKTOP;
+		fs_flag = SDL_WINDOW_FULLSCREEN;
 	}
 	else if (fullscreen == 2)
 	{
-		fs_flag = SDL_WINDOW_FULLSCREEN;
+		fs_flag = SDL_WINDOW_FULLSCREEN_DESKTOP;
 	}
 
 	/* Only do this if we already have a working window and a fully
@@ -517,7 +531,7 @@ GLimp_InitGraphics(int fullscreen, int *pwidth, int *pheight)
 	}
 
 	/* Mkay, now the hard work. Let's create the window. */
-	cvar_t *gl_msaa_samples = Cvar_Get("gl_msaa_samples", "0", CVAR_ARCHIVE);
+	cvar_t *gl_msaa_samples = Cvar_Get("r_msaa_samples", "0", CVAR_ARCHIVE);
 
 	while (1)
 	{
@@ -531,7 +545,7 @@ GLimp_InitGraphics(int fullscreen, int *pwidth, int *pheight)
 					        (int) Cvar_VariableValue("r_mode"), width, height);
 
 				/* Try to recover */
-				Cvar_SetValue("gl_msaa_samples", 0);
+				Cvar_SetValue("r_msaa_samples", 0);
 
 				SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
 				SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
@@ -580,8 +594,7 @@ GLimp_InitGraphics(int fullscreen, int *pwidth, int *pheight)
 	}
 	else
 	{
-		Com_Printf("Real display mode: %ix%i@%i (vid_fullscreen: %i)\n", mode.w, mode.h,
-				mode.refresh_rate, fullscreen);
+		Com_Printf("Real display mode: %ix%i@%i\n", mode.w, mode.h, mode.refresh_rate);
 	}
 
 

@@ -133,7 +133,7 @@ extern void NoAmmoWeaponChange ( edict_t * ent ) ;
 extern void ChangeWeapon ( edict_t * ent ) ;
 extern qboolean Pickup_Weapon ( edict_t * ent , edict_t * other ) ;
 extern void PlayerNoise ( edict_t * who , vec3_t where , int type ) ;
-extern void P_ProjectSource ( gclient_t * client , vec3_t point , vec3_t distance , vec3_t forward , vec3_t right , vec3_t result ) ;
+extern void P_ProjectSource ( edict_t * ent , vec3_t distance , vec3_t forward , vec3_t right , vec3_t result ) ;
 extern void ClientEndServerFrame ( edict_t * ent ) ;
 extern void G_SetClientFrame ( edict_t * ent ) ;
 extern void G_SetClientSound ( edict_t * ent ) ;
@@ -194,7 +194,7 @@ extern void ClientObituary ( edict_t * self , edict_t * inflictor , edict_t * at
 extern qboolean IsNeutral ( edict_t * ent ) ;
 extern qboolean IsFemale ( edict_t * ent ) ;
 extern void player_pain ( edict_t * self , edict_t * other , float kick , int damage ) ;
-extern void SP_info_player_intermission ( void ) ;
+extern void SP_info_player_intermission ( edict_t * ent ) ;
 extern void SP_info_player_coop ( edict_t * self ) ;
 extern void SP_info_player_deathmatch ( edict_t * self ) ;
 extern void SP_info_player_start ( edict_t * self ) ;
@@ -812,6 +812,7 @@ extern void misc_deadsoldier_die ( edict_t * self , edict_t * inflictor , edict_
 extern void SP_misc_banner ( edict_t * ent ) ;
 extern void misc_banner_think ( edict_t * ent ) ;
 extern void SP_monster_commander_body ( edict_t * self ) ;
+extern void commander_body_die ( edict_t * self , edict_t * inflictor , edict_t * attacker , int damage , vec3_t point ) ;
 extern void commander_body_drop ( edict_t * self ) ;
 extern void commander_body_use ( edict_t * self , edict_t * other , edict_t * activator ) ;
 extern void commander_body_think ( edict_t * self ) ;

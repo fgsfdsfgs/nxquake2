@@ -26,6 +26,8 @@
  * =======================================================================
  */
 
+#include <ctype.h>
+
 #include "header/common.h"
 
 #define MAX_ALIAS_NAME 32
@@ -366,6 +368,9 @@ Cbuf_AddLateCommands(void)
 	return ret;
 }
 
+/*
+ * Execute a script file
+ */
 void
 Cmd_Exec_f(void)
 {
@@ -386,7 +391,7 @@ Cmd_Exec_f(void)
 		return;
 	}
 
-	Com_Printf("execing %s\n", Cmd_Argv(1));
+	Com_Printf("execing %s.\n", Cmd_Argv(1));
 
 	/* the file doesn't have a trailing 0, so we need to copy it off */
 	/* we also add a newline */
@@ -399,6 +404,21 @@ Cmd_Exec_f(void)
 
 	Z_Free(f2);
 	FS_FreeFile(f);
+}
+
+/*
+ * Inserts the current value of a variable as command text
+ */
+void Cmd_Vstr_f( void ) {
+	const char	*v;
+
+	if (Cmd_Argc() != 2) {
+		Com_Printf("vstr <variablename> : execute a variable command\n");
+		return;
+	}
+
+	v = Cvar_VariableString(Cmd_Argv(1));
+	Cbuf_InsertText(va("%s\n", v));
 }
 
 /*
@@ -768,12 +788,6 @@ Cmd_Exists(char *cmd_name)
 	return false;
 }
 
-int
-qsort_strcomp(const void *s1, const void *s2)
-{
-	return strcmp(*(char **)s1, *(char **)s2);
-}
-
 char *
 Cmd_CompleteCommand(char *partial)
 {
@@ -859,7 +873,7 @@ Cmd_CompleteCommand(char *partial)
 		}
 
 		/* Sort it */
-		qsort(pmatch, i, sizeof(pmatch[0]), qsort_strcomp);
+		qsort(pmatch, i, sizeof(pmatch[0]), Q_sort_strcomp);
 
 		Com_Printf("\n\n");
 
@@ -927,12 +941,12 @@ Cmd_CompleteMapCommand(char *partial)
 			mapName = strtok(mapName, ".");
 
 			/* check for exact match */
-			if (!strcmp(partial, mapName))
+			if (!Q_strcasecmp(partial, mapName))
 			{
 				strcpy(retval, partial);
 			}
 			/* check for partial match */
-			else if (!strncmp(partial, mapName, len))
+			else if (!Q_strncasecmp(partial, mapName, len))
 			{
 				pmatch[nbMatches] = mapName;
 				nbMatches++;
@@ -957,7 +971,7 @@ Cmd_CompleteMapCommand(char *partial)
 			{
 				for (k = 1; k < nbMatches; k++)
 				{
-					if (j >= strlen(pmatch[k]) || pmatch[0][j] != pmatch[k][j])
+					if (j >= strlen(pmatch[k]) || tolower((unsigned char)pmatch[0][j]) != tolower((unsigned char)pmatch[k][j]))
 					{
 						partialFillContinue = false;
 						break;
@@ -1111,6 +1125,7 @@ Cmd_Init(void)
 	/* register our commands */
 	Cmd_AddCommand("cmdlist", Cmd_List_f);
 	Cmd_AddCommand("exec", Cmd_Exec_f);
+	Cmd_AddCommand("vstr", Cmd_Vstr_f);
 	Cmd_AddCommand("echo", Cmd_Echo_f);
 	Cmd_AddCommand("alias", Cmd_Alias_f);
 	Cmd_AddCommand("wait", Cmd_Wait_f);

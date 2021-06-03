@@ -61,29 +61,75 @@ static menulist_s s_msaa_list;
 static menuaction_s s_defaults_action;
 static menuaction_s s_apply_action;
 
-static int
-GetRenderer(void)
+// --------
+
+// gl1, gl3, vk, soft
+#define MAXRENDERERS 4
+
+typedef struct
 {
-	/* First element in array is 'OpenGL 1.4' aka gl1.
-	   Second element in array is 'OpenGL 3.2' aka gl3.
-	   Third element in array is unknown renderer. */
-	if (Q_stricmp(vid_renderer->string, "gl1") == 0)
+	const char *boxstr;
+	const char *cvarstr;
+} renderer;
+
+renderer rendererlist[MAXRENDERERS];
+int numrenderer;
+
+static void
+Renderer_FillRenderdef(void)
+{
+	numrenderer = -1;
+
+	if (VID_HasRenderer("gl1"))
 	{
-		return 0;
+		numrenderer++;
+		rendererlist[numrenderer].boxstr = "[OpenGL 1.4]";
+		rendererlist[numrenderer].cvarstr = "gl1";
 	}
-	else if (Q_stricmp(vid_renderer->string, "gl3") == 0)
+
+	if (VID_HasRenderer("gl3"))
 	{
-		return 1;
+		numrenderer++;
+		rendererlist[numrenderer].boxstr = "[OpenGL 3.2]";
+		rendererlist[numrenderer].cvarstr = "gl3";
 	}
-	else if (Q_stricmp(vid_renderer->string, "soft") == 0)
+
+	if (VID_HasRenderer("vk"))
 	{
-		return 2;
+		numrenderer++;
+		rendererlist[numrenderer].boxstr = "[Vulkan    ]";
+		rendererlist[numrenderer].cvarstr = "vk";
 	}
-	else
+
+	if (VID_HasRenderer("soft"))
 	{
-		return 3;
+		numrenderer++;
+		rendererlist[numrenderer].boxstr = "[Software  ]";
+		rendererlist[numrenderer].cvarstr = "soft";
 	}
+
+	// The custom renderer. Must be known to the menu,
+	// but nothing more. The display string is hard
+	// coded below, the cvar is unknown.
+	numrenderer++;
 }
+
+static int
+Renderer_GetRenderer(void)
+{
+	for (int i = 0; i < numrenderer; i++)
+	{
+		if (strcmp(vid_renderer->string, rendererlist[i].cvarstr) == 0)
+		{
+			return i;
+		}
+	}
+
+	// Unknown renderer.
+	return numrenderer;
+}
+
+// --------
 
 static int
 GetCustomValue(menulist_s *list)
@@ -122,21 +168,6 @@ FOVCallback(void *s) {
 }
 
 static void
-AnisotropicCallback(void *s)
-{
-	menulist_s *list = (menulist_s *)s;
-
-	if (list->curvalue == 0)
-	{
-		Cvar_SetValue("gl_anisotropic", 0);
-	}
-	else
-	{
-		Cvar_SetValue("gl_anisotropic", pow(2, list->curvalue));
-	}
-}
-
-static void
 ResetDefaults(void *unused)
 {
 	VID_MenuInit();
@@ -151,24 +182,14 @@ ApplyChanges(void *unused)
 	qboolean restart = false;
 
 	/* Renderer */
-	if (s_renderer_list.curvalue != GetRenderer())
+	if (s_renderer_list.curvalue != Renderer_GetRenderer())
 	{
-		/*  First element in array is 'OpenGL 1.4' aka gl1.
-			Second element in array is 'OpenGL 3.2' aka gl3.
-			Third element in array is unknown renderer. */
-		if (s_renderer_list.curvalue == 0)
+		// The custom renderer (the last known renderer) cannot be
+		// set, because the menu doesn't know it's cvar value. TODO:
+		// Hack something that it cannot be selected.
+		if (s_renderer_list.curvalue != numrenderer)
 		{
-			Cvar_Set("vid_renderer", "gl1");
-			restart = true;
-		}
-		else if (s_renderer_list.curvalue == 1)
-		{
-			Cvar_Set("vid_renderer", "gl3");
-			restart = true;
-		}
-		else if (s_renderer_list.curvalue == 2)
-		{
-			Cvar_Set("vid_renderer", "soft");
+			Cvar_Set("vid_renderer", (char *)rendererlist[s_renderer_list.curvalue].cvarstr);
 			restart = true;
 		}
 	}
@@ -177,19 +198,19 @@ ApplyChanges(void *unused)
 	if (!strcmp(s_mode_list.itemnames[s_mode_list.curvalue],
 		AUTO_MODE_NAME))
 	{
-		/* Restarts automatically */
 		Cvar_SetValue("r_mode", -2);
+		restart = true;
 	}
 	else if (!strcmp(s_mode_list.itemnames[s_mode_list.curvalue],
 		CUSTOM_MODE_NAME))
 	{
-		/* Restarts automatically */
 		Cvar_SetValue("r_mode", -1);
+		restart = true;
 	}
 	else
 	{
-		/* Restarts automatically */
 		Cvar_SetValue("r_mode", s_mode_list.curvalue);
+		restart = true;
 	}
 
 	if (s_display_list.curvalue != GLimp_GetWindowDisplayIndex() )
@@ -216,7 +237,16 @@ ApplyChanges(void *unused)
 	}
 
 	/* Restarts automatically */
-	Cvar_SetValue("vid_fullscreen", s_fs_box.curvalue);
+	if (vid_fullscreen->value != s_fs_box.curvalue)
+	{
+		Cvar_SetValue("vid_fullscreen", s_fs_box.curvalue);
+		restart = true;
+	}
+
+	if (s_fs_box.curvalue == 2)
+	{
+		Cvar_SetValue("r_mode", -2.0f);
+	}
 
 	/* vertical sync */
 	if (r_vsync->value != s_vsync_list.curvalue)
@@ -225,12 +255,30 @@ ApplyChanges(void *unused)
 		restart = true;
 	}
 
+	/* anisotropic filtering */
+	if (s_af_list.curvalue == 0)
+	{
+		if (gl_anisotropic->value != 0)
+		{
+			Cvar_SetValue("r_anisotropic", 0);
+			restart = true;
+		}
+	}
+	else
+	{
+		if (gl_anisotropic->value != pow(2, s_af_list.curvalue))
+		{
+			Cvar_SetValue("r_anisotropic", pow(2, s_af_list.curvalue));
+			restart = true;
+		}
+	}
+
 	/* multisample anti-aliasing */
 	if (s_msaa_list.curvalue == 0)
 	{
 		if (gl_msaa_samples->value != 0)
 		{
-			Cvar_SetValue("gl_msaa_samples", 0);
+			Cvar_SetValue("r_msaa_samples", 0);
 			restart = true;
 		}
 	}
@@ -238,7 +286,7 @@ ApplyChanges(void *unused)
 	{
 		if (gl_msaa_samples->value != pow(2, s_msaa_list.curvalue))
 		{
-			Cvar_SetValue("gl_msaa_samples", pow(2, s_msaa_list.curvalue));
+			Cvar_SetValue("r_msaa_samples", pow(2, s_msaa_list.curvalue));
 			restart = true;
 		}
 	}
@@ -256,13 +304,17 @@ VID_MenuInit(void)
 {
 	int y = 0;
 
-	static const char *renderers[] = {
-			"[OpenGL 1.4]",
-			"[OpenGL 3.2]",
-			"[Software  ]",
-			CUSTOM_MODE_NAME,
-			0
-	};
+    // Renderer selection box.
+	// MAXRENDERERS + Custom + NULL.
+	static const char *renderers[MAXRENDERERS + 2] = { NULL };
+    Renderer_FillRenderdef();
+
+	for (int i = 0; i < numrenderer; i++)
+	{
+		renderers[i] = rendererlist[i].boxstr;
+	}
+
+	renderers[numrenderer] = CUSTOM_MODE_NAME;
 
 	// must be kept in sync with vid_modes[] in vid.c
 	static const char *resolutions[] = {
@@ -323,8 +375,8 @@ VID_MenuInit(void)
 
 	static const char *fullscreen_names[] = {
 			"no",
-			"keep resolution",
-			"switch resolution",
+			"native fullscreen",
+			"fullscreen window",
 			0
 	};
 
@@ -389,12 +441,12 @@ VID_MenuInit(void)
 
 	if (!gl_anisotropic)
 	{
-		gl_anisotropic = Cvar_Get("gl_anisotropic", "0", CVAR_ARCHIVE);
+		gl_anisotropic = Cvar_Get("r_anisotropic", "0", CVAR_ARCHIVE);
 	}
 
 	if (!gl_msaa_samples)
 	{
-		gl_msaa_samples = Cvar_Get("gl_msaa_samples", "0", CVAR_ARCHIVE);
+		gl_msaa_samples = Cvar_Get("r_msaa_samples", "0", CVAR_ARCHIVE);
 	}
 
 	s_opengl_menu.x = viddef.width * 0.50;
@@ -405,7 +457,7 @@ VID_MenuInit(void)
 	s_renderer_list.generic.x = 0;
 	s_renderer_list.generic.y = (y = 0);
 	s_renderer_list.itemnames = renderers;
-	s_renderer_list.curvalue = GetRenderer();
+	s_renderer_list.curvalue = Renderer_GetRenderer();
 
 	s_mode_list.generic.type = MTYPE_SPINCONTROL;
 	s_mode_list.generic.name = "video mode";
@@ -500,7 +552,6 @@ VID_MenuInit(void)
 	s_af_list.generic.name = "aniso filtering";
 	s_af_list.generic.x = 0;
 	s_af_list.generic.y = (y += 10);
-	s_af_list.generic.callback = AnisotropicCallback;
 	s_af_list.itemnames = pow2_names;
 	s_af_list.curvalue = 0;
 	if (gl_anisotropic->value)

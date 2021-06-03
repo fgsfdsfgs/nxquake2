@@ -424,7 +424,7 @@ Sys_GetGameAPI(void *parms)
 
 		if (game_library)
 		{
-			Com_DPrintf("LoadLibrary (%s)\n", name);
+			Com_DPrintf("Loading library: %s\n", name);
 			break;
 		}
 
@@ -435,7 +435,7 @@ Sys_GetGameAPI(void *parms)
 
 		if (game_library)
 		{
-			Com_DPrintf("LoadLibrary (%s)\n", name);
+			Com_DPrintf("Loading library: %s\n", name);
 			break;
 		}
 	}
@@ -454,12 +454,18 @@ Sys_GetGameAPI(void *parms)
 /* ======================================================================= */
 
 void
-Sys_Mkdir(char *path)
+Sys_Mkdir(const char *path)
 {
-	WCHAR wpath[MAX_OSPATH] = {0};
-	MultiByteToWideChar(CP_UTF8, 0, path, -1, wpath, MAX_OSPATH);
+	if (!Sys_IsDir(path))
+	{
+		WCHAR wpath[MAX_OSPATH] = {0};
+		MultiByteToWideChar(CP_UTF8, 0, path, -1, wpath, MAX_OSPATH);
 
-	CreateDirectoryW(wpath, NULL);
+		if (CreateDirectoryW(wpath, NULL) == 0)
+		{
+			Com_Error(ERR_FATAL, "Couldn't create dir %s\n", path);
+		}
+	}
 }
 
 qboolean
@@ -530,6 +536,7 @@ Sys_GetHomeDir(void)
 	}
 
 	snprintf(gdir, sizeof(gdir), "%s/%s/", profile, cfgdir);
+	Sys_Mkdir(gdir);
 
 	return gdir;
 }
@@ -584,6 +591,23 @@ Sys_RemoveDir(const char *path)
 	}
 	
 	RemoveDirectoryW(wpath);
+}
+
+void
+Sys_Realpath(const char *in, char *out, size_t size)
+{
+	WCHAR win[MAX_OSPATH] = {0};
+	WCHAR wconverted[MAX_OSPATH] = {0};
+
+	MultiByteToWideChar(CP_UTF8, 0, in, -1, win, sizeof(win));
+	_wfullpath(wconverted, win, size);
+
+	if (wconverted == NULL)
+	{
+		Com_Error(ERR_FATAL, "Couldn't get realpath for %s\n", in);
+	}
+
+	WideCharToMultiByte(CP_UTF8, 0, wconverted, -1, out, size, NULL, NULL);
 }
 
 /* ======================================================================= */
@@ -717,6 +741,9 @@ Sys_RedirectStdout(void)
 
 	_wfreopen(wpath_stdout, L"w", stdout);
 	_wfreopen(wpath_stderr, L"w", stderr);
+
+	setvbuf(stdout, (char *)NULL, _IOLBF, BUFSIZ);
+	setvbuf(stderr, (char *)NULL, _IOLBF, BUFSIZ);
 }
 
 /* ======================================================================= */

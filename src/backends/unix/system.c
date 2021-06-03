@@ -361,7 +361,7 @@ Sys_GetGameAPI(void *parms)
 		Com_Error(ERR_FATAL, "Sys_GetGameAPI without Sys_UnloadingGame");
 	}
 
-	Com_Printf("LoadLibrary(\"%s\")\n", gamename);
+	Com_Printf("Loading library: %s\n", gamename);
 
 	/* now run through the search paths */
 	path = NULL;
@@ -393,12 +393,12 @@ Sys_GetGameAPI(void *parms)
 
 		if (game_library)
 		{
-			Com_MDPrintf("LoadLibrary (%s)\n", name);
+			Com_MDPrintf("Loading library: %s\n", name);
 			break;
 		}
 		else
 		{
-			Com_Printf("LoadLibrary (%s):", name);
+			Com_Printf("Loading library: %s\n: ", name);
 
 			path = (char *)dlerror();
 			str_p = strchr(path, ':');   /* skip the path (already shown) */
@@ -432,9 +432,15 @@ Sys_GetGameAPI(void *parms)
 /* ================================================================ */
 
 void
-Sys_Mkdir(char *path)
+Sys_Mkdir(const char *path)
 {
-	mkdir(path, 0755);
+	if (!Sys_IsDir(path))
+	{
+		if (mkdir(path, 0755) != 0)
+		{
+			Com_Error(ERR_FATAL, "Couldn't create dir %s\n", path);
+		}
+	}
 }
 
 qboolean
@@ -483,6 +489,7 @@ Sys_GetHomeDir(void)
 	}
 
 	snprintf(gdir, sizeof(gdir), "%s/%s/", home, cfgdir);
+	Sys_Mkdir(gdir);
 
 	return gdir;
 }
@@ -517,6 +524,20 @@ Sys_RemoveDir(const char *path)
 		closedir(directory);
 		Sys_Remove(path);
 	}
+}
+
+void
+Sys_Realpath(const char *in, char *out, size_t size)
+{
+	char *converted = realpath(in, NULL);
+
+	if (converted == NULL)
+	{
+		Com_Error(ERR_FATAL, "Couldn't get realpath for %s\n", in);
+	}
+
+	Q_strlcpy(out, converted, size);
+	free(converted);
 }
 
 /* ================================================================ */

@@ -300,13 +300,65 @@ void *reflib_handle = NULL;
 // Is a renderer loaded and active?
 qboolean ref_active = false;
 
+// Renderer restart type requested.
+ref_restart_t restart_state = RESTART_UNDEF;
+
+// Renderer lib extension.
+#ifdef __APPLE__
+const char* lib_ext = "dylib";
+#elif defined(_WIN32)
+const char* lib_ext = "dll";
+#else
+const char* lib_ext = "so";
+#endif
+
+/*
+ * Returns platform specific path to a renderer lib.
+ */
+static void
+VID_GetRendererLibPath(const char *renderer, char *path, size_t len)
+{
+	snprintf(path, len, "%sref_%s.%s", Sys_GetBinaryDir(), renderer, lib_ext);
+}
+
+/*
+ * Checks if a renderer DLL is available.
+ */
+qboolean
+VID_HasRenderer(const char *renderer)
+{
+	char reflib_path[MAX_OSPATH] = {0};
+	VID_GetRendererLibPath(renderer, reflib_path, sizeof(reflib_path));
+
+	if (Sys_IsFile(reflib_path))
+	{
+		return true;
+	}
+
+	return false;
+}
+
+/*
+ * Called by the renderer to request a restart.
+ */
+void
+VID_RequestRestart(ref_restart_t rs)
+{
+	restart_state = rs;
+}
+
 /*
  * Restarts the renderer.
  */
 void
 VID_Restart_f(void)
 {
-	vid_fullscreen->modified = true;
+	if (restart_state == RESTART_UNDEF)
+	{
+		vid_fullscreen->modified = true;
+	} else {
+		restart_state = RESTART_FULL;
+	}
 }
 
 /*
@@ -338,14 +390,6 @@ VID_LoadRenderer(void)
 	refimport_t	ri;
 	GetRefAPI_t	GetRefAPI;
 
-#ifdef __APPLE__
-	const char* lib_ext = "dylib";
-#elif defined(_WIN32)
-	const char* lib_ext = "dll";
-#else
-	const char* lib_ext = "so";
-#endif
-
 	char reflib_name[64] = {0};
 	char reflib_path[MAX_OSPATH] = {0};
 
@@ -357,8 +401,16 @@ VID_LoadRenderer(void)
 	Com_Printf("----- refresher initialization -----\n");
 
 	snprintf(reflib_name, sizeof(reflib_name), "ref_%s.%s", vid_renderer->string, lib_ext);
-	snprintf(reflib_path, sizeof(reflib_path), "%s%s", Sys_GetBinaryDir(), reflib_name);
-	Com_Printf("LoadLibrary(%s)\n", reflib_name);
+	VID_GetRendererLibPath(vid_renderer->string, reflib_path, sizeof(reflib_path));
+	Com_Printf("Loading library: %s\n", reflib_name);
+
+	// Check if the renderer libs exists.
+	if (!VID_HasRenderer(vid_renderer->string))
+	{
+        Com_Printf("Library %s cannot be found!\n", reflib_name);
+
+		return false;
+	}
 
 	// Mkay, let's load the requested renderer.
 	GetRefAPI = Sys_LoadLibrary(reflib_path, "GetRefAPI", &reflib_handle);
@@ -367,7 +419,7 @@ VID_LoadRenderer(void)
 	// caller to recover from this.
 	if (GetRefAPI == NULL)
 	{
-		Com_Printf("Loading %s as renderer lib failed!", reflib_path);
+		Com_Printf("Loading %s as renderer lib failed!\n", reflib_name);
 
 		return false;
 	}
@@ -392,6 +444,8 @@ VID_LoadRenderer(void)
 	ri.Vid_GetModeInfo = VID_GetModeInfo;
 	ri.Vid_MenuInit = VID_MenuInit;
 	ri.Vid_WriteScreenshot = VID_WriteScreenshot;
+	ri.Vid_WriteScreenshot = VID_WriteScreenshot;
+	ri.Vid_RequestRestart = VID_RequestRestart;
 
 	// Exchange our export struct with the renderers import struct.
 	re = GetRefAPI(ri);
@@ -414,7 +468,7 @@ VID_LoadRenderer(void)
 	{
 		VID_ShutdownRenderer();
 
-		Com_Printf("ERROR: Loading %s as rendering backend failed!\n", reflib_name);
+		Com_Printf("ERROR: Loading %s as rendering backend failed.\n", reflib_name);
 		Com_Printf("------------------------------------\n\n");
 
 		return false;
@@ -423,7 +477,7 @@ VID_LoadRenderer(void)
 	/* Ensure that all key states are cleared */
 	Key_MarkAllUp();
 
-	Com_Printf("Successfully loaded %s as rendering backend\n", reflib_name);
+	Com_Printf("Successfully loaded %s as rendering backend.\n", reflib_name);
 	Com_Printf("------------------------------------\n\n");
 
 	return true;
@@ -436,11 +490,25 @@ VID_LoadRenderer(void)
 void
 VID_CheckChanges(void)
 {
-	// FIXME: Not with vid_fullscreen, should be a dedicated variable.
-	// Sounds easy but this vid_fullscreen hack is really messy and
-	// interacts with several critical places in both the client and
-	// the renderers...
-	if (vid_fullscreen->modified)
+	// Hack around renderers that still abuse vid_fullscreen
+	// to communicate restart requests to the client.
+	ref_restart_t rs;
+
+	if (restart_state == RESTART_UNDEF)
+	{
+		if (vid_fullscreen->modified)
+		{
+			rs = RESTART_FULL;
+			vid_fullscreen->modified = false;
+		} else {
+			rs = RESTART_NO;
+		}
+	} else {
+		rs = restart_state;
+		restart_state = RESTART_NO;
+	}
+
+	if (rs == RESTART_FULL)
 	{
 		// Stop sound, because the clients blocks while
 		// we're reloading the renderer. The sound system
@@ -457,8 +525,15 @@ VID_CheckChanges(void)
 		// Mkay, let's try our luck.
 		while (!VID_LoadRenderer())
 		{
-			// We try: gl3 -> gl1 -> soft.
-			if (strcmp(vid_renderer->string, "gl3") == 0)
+			// We try: custom -> gl3 -> gl1 -> soft.
+			if ((strcmp(vid_renderer->string, "gl3") != 0) &&
+				(strcmp(vid_renderer->string, "gl1") != 0) &&
+				(strcmp(vid_renderer->string, "soft") != 0))
+			{
+				Com_Printf("Retrying with gl3...\n");
+				Cvar_Set("vid_renderer", "gl3");
+			}
+			else if (strcmp(vid_renderer->string, "gl3") == 0)
 			{
 				Com_Printf("Retrying with gl1...\n");
 				Cvar_Set("vid_renderer", "gl1");
@@ -473,16 +548,15 @@ VID_CheckChanges(void)
 				// Sorry, no usable renderer found.
 				Com_Error(ERR_FATAL, "No usable renderer found!\n");
 			}
-			else
-			{
-				// User forced something stupid.
-				Com_Printf("Retrying with gl3...\n");
-				Cvar_Set("vid_renderer", "gl3");
-			}
 		}
 
 		// Unblock the client.
 		cls.disable_screen = false;
+	}
+
+	if (rs == RESTART_PARTIAL)
+	{
+		cl.refresh_prepped = false;
 	}
 }
 
@@ -500,6 +574,7 @@ VID_Init(void)
 	// Commands
 	Cmd_AddCommand("vid_restart", VID_Restart_f);
 	Cmd_AddCommand("vid_listmodes", VID_ListModes_f);
+	Cmd_AddCommand("r_listmodes", VID_ListModes_f); // more consistent with r_mode
 
 	// Initializes the video backend. This is NOT the renderer
 	// itself, just the client side support stuff!
@@ -685,6 +760,16 @@ R_BeginFrame(float camera_separation)
 	{
 		re.BeginFrame(camera_separation);
 	}
+}
+
+qboolean
+R_EndWorldRenderpass(void)
+{
+	if(ref_active)
+	{
+		return re.EndWorldRenderpass();
+	}
+	return false;
 }
 
 void

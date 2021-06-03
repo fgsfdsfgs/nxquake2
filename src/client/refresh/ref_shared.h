@@ -66,8 +66,12 @@ extern void GetPCXInfo(char *filename, int *width, int *height);
 extern qboolean LoadSTB(const char *origname, const char* type, byte **pic, int *width, int *height);
 extern qboolean ResizeSTB(byte *input_pixels, int input_width, int input_height,
 			  byte *output_pixels, int output_width, int output_height);
+extern void SmoothColorImage(unsigned *dst, size_t size, size_t rstep);
+extern void scale2x(byte *src, byte *dst, int width, int height);
+extern void scale3x(byte *src, byte *dst, int width, int height);
 
 extern void GetWalInfo(char *name, int *width, int *height);
+extern void GetM8Info(char *name, int *width, int *height);
 
 extern float Mod_RadiusFromBounds(const vec3_t mins, const vec3_t maxs);
 extern byte* Mod_DecompressVis(byte *in, int row);

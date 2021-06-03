@@ -48,7 +48,7 @@ cvar_t *cl_add_particles;
 cvar_t *cl_add_lights;
 cvar_t *cl_add_entities;
 cvar_t *cl_add_blend;
-cvar_t *cl_anglekicks;
+cvar_t *cl_kickangles;
 
 cvar_t *cl_shownet;
 cvar_t *cl_showmiss;
@@ -58,6 +58,8 @@ cvar_t *cl_paused;
 cvar_t *cl_loadpaused;
 
 cvar_t *cl_lightlevel;
+cvar_t *cl_r1q2_lightstyle;
+cvar_t *cl_limitsparksounds;
 
 /* userinfo */
 cvar_t *name;
@@ -493,7 +495,7 @@ CL_InitLocal(void)
 	cl_add_lights = Cvar_Get("cl_lights", "1", 0);
 	cl_add_particles = Cvar_Get("cl_particles", "1", 0);
 	cl_add_entities = Cvar_Get("cl_entities", "1", 0);
-	cl_anglekicks = Cvar_Get("cl_anglekicks", "1", 0);
+	cl_kickangles = Cvar_Get("cl_kickangles", "1", 0);
 	cl_gun = Cvar_Get("cl_gun", "2", CVAR_ARCHIVE);
 	cl_footsteps = Cvar_Get("cl_footsteps", "1", 0);
 	cl_noskins = Cvar_Get("cl_noskins", "0", 0);
@@ -524,6 +526,8 @@ CL_InitLocal(void)
 	rcon_address = Cvar_Get("rcon_address", "", 0);
 
 	cl_lightlevel = Cvar_Get("r_lightlevel", "0", 0);
+	cl_r1q2_lightstyle = Cvar_Get("cl_r1q2_lightstyle", "1", CVAR_ARCHIVE);
+	cl_limitsparksounds = Cvar_Get("cl_limitsparksounds", "0", CVAR_ARCHIVE);
 
 	/* userinfo */
 	name = Cvar_Get("name", "unnamed", CVAR_USERINFO | CVAR_ARCHIVE);
@@ -664,7 +668,8 @@ cheatvar_t cheatvars[] = {
 	{"sw_draworder", "0"},
 	{"gl_lightmap", "0"},
 	{"gl_saturatelighting", "0"},
-	{"cl_anglekicks", "1"},
+	{"cl_kickangles", "1"},
+	{"g_footsteps", "1"},
 	{NULL, NULL}
 };
 
@@ -950,4 +955,3 @@ CL_Shutdown(void)
 	IN_Shutdown();
 	VID_Shutdown();
 }
-

@@ -32,6 +32,8 @@ are prefixed with a `+`, arguments are starting with a `-`. For example
 it's `+set busywait 0` (setting the `busywait` cvar) and `-portable`
 (setting the `portable` argument).
 
+* **cfgdir**: The name (not the path) of the configuration directory.
+
 * **datadir**: Directory from which the game data is loaded. Can be used
   in startup scripts, to test binaries, etc. If not set, the directory
   containing the binaries is used.
@@ -55,8 +57,8 @@ it's `+set busywait 0` (setting the `busywait` cvar) and `-portable`
   time for the next frame. The later is more CPU friendly but rather
   inaccurate, especially on Windows. Use with care.
 
-* **cl_anglekicks**: If set to `0` angle kicks (weapon recoil, damage
-  hits and the like) are ignored. Cheat protected. Defaults to `1`.
+* **cl_kickangles**: If set to `0` angle kicks (weapon recoil, damage
+  hits and the like) are ignored. Cheat-protected. Defaults to `1`.
 
 * **cl_async**: If set to `1` (the default) the client is asynchronous.
   The client framerate is fixed, the renderer framerate is variable.
@@ -74,12 +76,22 @@ it's `+set busywait 0` (setting the `busywait` cvar) and `-portable`
   If *cl_async* is set to `0` *vid_maxfps* is the same as *cl_maxfps*,
   use *cl_maxfps* to set the framerate.
 
+* **cl_limitsparksounds**: If set to `1` the number of sound generated
+  when shooting into power screen and power shields is limited to 16.
+  This works around global volume drops in some OpenAL implementations
+  if too many sounds are played at the same time. This was the default
+  behavior between Yamagi Quake II 7.10 and 7.45. Defaults to `0`.
+
 * **cl_loadpaused**: If set to `1` (the default) the client is put into
   pause mode during single player savegame load. This prevents monsters
   and the environment from hurting the player while the client is still
   connecting. If set to `2` the client stays in pause mode after
   loading. If set to `0` pause mode is never entered, this is the
   Vanilla Quake II behaviour.
+
+* **cl_r1q2_lightstyle**: Since the first release Yamagi Quake II used
+  the R1Q2 colors for the dynamic lights of rockets. Set to `0` to get
+  the Vanilla Quake II colors. Defaults to `1`.
 
 * **cl_showfps**: Shows the framecounter. Set to `2` for more and to
   `3` for even more informations.
@@ -90,11 +102,21 @@ it's `+set busywait 0` (setting the `busywait` cvar) and `-portable`
   during gameplay and released otherwise (in menu, videos, console or if
   game is paused).
 
+* **singleplayer**: Only available in the dedicated server. Vanilla
+  Quake II enforced that either `coop` or `deathmatch` is set to `1`
+  when running the dedicated server. That made it impossible to play
+  single player campaigns over the dedicated server. When set to `1`,
+  both `coop` and `deathmatch` are forced to `0` and `maxclients` is
+  forced to `1`. This can be used to run a dedicated server with an old
+  single player mod, where the source code isn't available, inside a
+  Windows 98 or XP VM and connect over network from an non Windows
+  system.
+
 * **coop_pickup_weapons**: In coop a weapon can be picked up only once.
   For example, if the player already has the shotgun they cannot pickup
   a second shotgun found at a later time, thus not getting the ammo that
-  comes with it. This breaks the balacing. If set to `1` a weapon can be
-  picked up if a) the player doesn't have it or b) it wasn't already
+  comes with it. This breaks the balancing. If set to `1` a weapon can
+  be picked up if a) the player doesn't have it or b) it wasn't already
   picked up by another player. Defaults to `1`.
 
 * **coop_elevator_delay**: In coop it's often hard to get on the same
@@ -117,6 +139,22 @@ it's `+set busywait 0` (setting the `busywait` cvar) and `-portable`
   disable it again before playing Ground Zero maps in co-op. By
   default this cvar is disabled (set to 0).
 
+* **g_commanderbody_nogod**: If set to `1` the tank commanders body
+  entity can be destroyed. If the to `0` (the default) it is
+  indestructible.
+
+* **g_footsteps**: If set to `1` (the default) footstep sounds are
+  generated when the player faster than 255. This is the behaviour of
+  Vanilla Quake II. If set to `2` footestep sound always generated. If
+  set to `0` footstep sounds are never generated. Cheat protected to
+  `1`.
+
+* **g_fix_triggered**: This cvar, when set to `1`, forces monsters to
+  spawn in normally if they are set to a triggered spawn but do not
+  have a targetname. There are a few cases of this in GroundZero and
+  The Reckoning. This cvar is disabled by default to maintain the
+  original gameplay experience.
+
 * **g_disruptor (Ground Zero only)**: This boolean cvar controls the
   availability of the Disruptor weapon to players. The Disruptor is
   a weapon that was cut from Ground Zero during development but all
@@ -125,9 +163,15 @@ it's `+set busywait 0` (setting the `busywait` cvar) and `-portable`
   2nd Widow boss' tracker weapon - a black-ish ball of energy.
   When this cvar is set to 1 you can use the "give Disruptor" and
   "give rounds X" commands to give yourself the weapon and its ammo,
-  and its items, weapon_disintegrator and ammo_disruptor, can be
+  and its items, weapon\_disintegrator and ammo\_disruptor, can be
   spawned in maps (in fact, some official Ground Zero maps contain
   these entities). This cvar is set to 0 by default.
+
+* **nextdemo**: Defines the next command to run after maps from the
+  `nextserver` list. By default this is set to the empty string.
+
+* **nextserver**: Used for looping the introduction demos.
+
 
 ## Audio
 
@@ -160,16 +204,6 @@ it's `+set busywait 0` (setting the `busywait` cvar) and `-portable`
 
 ## Graphics (all renderers)
 
-* **vid_displayrefreshrate**: Sets the displays refresh rate. The
-  default `-1` let the game determine the refresh rate automatically.
-  Often the default setting is okay, but some graphics drivers report
-  wrong refresh rates. For example 59hz are reported while the display
-  has 59.95hz.
-
-* **vid_renderer**: Selects the renderer library. Possible options are
-  `gl1` (the default) for the old OpenGL 1.4 renderer, `gl3` for the new
-  OpenGL 3.2 renderer and `soft` for the software renderer.
-
 * **cin_force43**: If set to `1` (the default) cinematics are displayed
   with an aspect ratio of 4:3, regardless what the actual windows size
   or resolution is.
@@ -192,14 +226,6 @@ it's `+set busywait 0` (setting the `busywait` cvar) and `-portable`
   to calculate an optimal horizontal and vertical field of view,
   independent of the window or screen aspect ratio or resolution.
 
-* **vid_gamma**: The value used for gamma correction. Higher values look
-  brighter. The OpenGL 1.4 and software renderers use "Hardware Gamma",
-  setting the Gamma of the whole screen to this value in realtime
-  (except on MacOS where it's applied to textures on load and thus needs
-  a `vid_restart` after changing). The OpenGL 3.2 renderer applies this
-  to the window in realtime via shaders (on all platforms).  This is
-  also set by the brightness slider in the video menu.
-
 * **r_consolescale** / **r_hudscale** / **r_menuscale** and
   **crosshair_scale**: Scale the console, the HUD, the menu and the
   crosshair. The value given is the scale factor, a factor of `1` means
@@ -216,6 +242,62 @@ it's `+set busywait 0` (setting the `busywait` cvar) and `-portable`
   to `1` the limit is increased to 8192 units. This helps with some
   custom maps and is problematic with other custom maps.
 
+* **r_fixsurfsky**: Some maps misuse sky surfaces for interior
+  lightning. The original renderer had a bug that made such surfaces
+  mess up the lightning of entities near them. If set to `0` (the
+  default) the bug is there and maps look like their developers
+  intended. If set to `1` the bug is fixed and the lightning correct.
+
+* **r_vsync**: Enables the vsync: frames are synchronized with
+  display refresh rate, should (but doesn't always) prevent tearing.
+  Set to `1` for normal vsync and `2` for adaptive vsync.
+
+* **r_anisotropic**: Anisotropic filtering. Possible values are
+  dependent on the GPU driver, most of them support `1`, `2`, `4`, `8`
+  and `16`. Anisotropic filtering gives a huge improvement to texture
+  quality by a negligible performance impact.
+
+* **r_msaa_samples**: Full scene anti aliasing samples. The number of
+  samples depends on the GPU driver, most drivers support at least `2`,
+  `4` and `8` samples. If an invalid value is set, the value is reverted
+  to the highest number of samples supported. Especially on OpenGL 3.2
+  anti aliasing is expensive and can lead to a huge performance hit, so
+  try setting it to a lower value if the framerate is too low.
+
+* **r_nolerp_list**: list separate by spaces of textures omitted from
+  bilinear filtering. Used by default to exclude the console and HUD
+  fonts.  Make sure to include the default values when extending the
+  list.
+
+* **r_retexturing**: If set to `1` (the default) and a retexturing pack
+  is installed, the high resolution textures are used.
+  If set to `2` and vulkan render is used, scale up all 8bit textures.
+
+* **r_shadows**: Enables rendering of shadows. Quake IIs shadows are
+  very simple and are prone to render errors.
+
+* **vid_displayrefreshrate**: Sets the displays refresh rate. The
+  default `-1` let the game determine the refresh rate automatically.
+  Often the default setting is okay, but some graphics drivers report
+  wrong refresh rates. For example 59hz are reported while the display
+  has 59.95hz.
+
+* **vid_gamma**: The value used for gamma correction. Higher values look
+  brighter. The OpenGL 1.4 and software renderers use "Hardware Gamma",
+  setting the Gamma of the whole screen to this value in realtime
+  (except on MacOS where it's applied to textures on load and thus needs
+  a `vid_restart` after changing). The OpenGL 3.2 and Vulkan renderers
+  apply this to the window in realtime via shaders (on all platforms).
+  This is also set by the brightness slider in the video menu.
+
+* **vid_fullscreen**: Sets the fullscreen mode. When set to `0` (the
+  default) the game runs in window mode. When set to `1` the games
+  switches the display to the requested resolution. That resolution
+  must be supported by the display, otherwise the game tries several
+  steps to recover. When set to `2` a fullscreen window is created.
+  It's recommended to use the displays native resolution with the
+  fullscreen window, use `r_mode -2` to switch to it.
+
 * **vid_maxfps**: The maximum framerate, if `cl_async` is `1`. Otherwise
   `cl_maxfps` is used as maximum framerate. See `cl_async` description
   above for more information.  *Note* that vsync (`r_vsync`) also
@@ -223,41 +305,12 @@ it's `+set busywait 0` (setting the `busywait` cvar) and `-portable`
   enabled, the game won't render more than frame than the display can
   show.
 
-* **r_vsync**: Enables the vsync: frames are synchronized with
-  display refresh rate, should (but doesn't always) prevent tearing.
-  Set to `1` for normal vsync and `2` for adaptive vsync.
+* **vid_renderer**: Selects the renderer library. Possible options are
+  `gl1` (the default) for the old OpenGL 1.4 renderer, `gl3` for the
+  OpenGL 3.2 renderer and `soft` for the software renderer.
 
 
 ## Graphics (GL renderers only)
-
-* **gl_anisotropic**: Anisotropic filtering. Possible values are
-  dependent on the GPU driver, most of them support `1`, `2`, `4`, `8`
-  and `16`. Anisotropic filtering gives a huge improvement to texture
-  quality by a negligible performance impact.
-
-* **gl_fixsurfsky**: Some maps misuse sky surfaces for interior
-  lightning. The original renderer had a bug that made such surfaces
-  mess up the lightning of entities near them. If set to `0` (the
-  default) the bug is there and maps look like their developers
-  intended. If set to `1` the bug is fixed and the lightning correct.
-
-* **gl_msaa_samples**: Full scene anti aliasing samples. The number of
-  samples depends on the GPU driver, most drivers support at least `2`,
-  `4` and `8` samples. If an invalid value is set, the value is reverted
-  to the highest number of samples supported. Especially on OpenGL 3.2
-  anti aliasing is expensive and can lead to a huge performance hit, so
-  try setting it to a lower value if the framerate is too low.
-
-* **gl_nolerp_list**: list separate by spaces of textures omitted from
-  bilinear filtering. Used by default to exclude the console and HUD
-  fonts.  Make sure to include the default values when extending the
-  list.
-
-* **gl_retexturing**: If set to `1` (the default) and a retexturing pack
-  is installed, the high resolution textures are used.
-
-* **gl_shadows**: Enables rendering of shadows. Quake IIs shadows are
-  very simple and are prone to render errors.
 
 * **gl_zfix**: Sometimes two or even more surfaces overlap and flicker.
   If this cvar is set to `1` the renderer inserts a small gap between
@@ -315,12 +368,14 @@ it's `+set busywait 0` (setting the `busywait` cvar) and `-portable`
 * **gl3_particle_square**: If set to `1`, particles are rendered as
   squares, like in the old software renderer or Quake 1. Default is `0`.
 
+
 ## Graphics (Software only)
 
 * **sw_gunzposition**: Z offset for the gun. In the original code this
   was always `0`, which will draw the gun too near to the player if a
-  custom gun field of few is used. Defaults to `8`, which is more or
+  custom gun field of view is used. Defaults to `8`, which is more or
   less optimal for the default gun field of view of 80.
+
 
 ## cvar operations
 

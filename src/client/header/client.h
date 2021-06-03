@@ -295,6 +295,12 @@ extern	cvar_t	*cl_showmiss;
 extern	cvar_t	*cl_showclamp;
 extern	cvar_t	*lookstrafe;
 extern	cvar_t	*sensitivity;
+extern	cvar_t	*joy_expo;
+extern	cvar_t	*joy_yawsensitivity;
+extern	cvar_t	*joy_pitchsensitivity;
+extern	cvar_t	*joy_forwardsensitivity;
+extern	cvar_t	*joy_sidesensitivity;
+extern	cvar_t	*joy_upsensitivity;
 extern	cvar_t	*m_pitch;
 extern	cvar_t	*m_yaw;
 extern	cvar_t	*m_forward;
@@ -308,7 +314,9 @@ extern	cvar_t	*cl_vwep;
 extern	cvar_t  *horplus;
 extern	cvar_t	*cin_force43;
 extern	cvar_t	*vid_fullscreen;
-extern	cvar_t	*cl_anglekicks;
+extern	cvar_t	*cl_kickangles;
+extern  cvar_t  *cl_r1q2_lightstyle;
+extern  cvar_t  *cl_limitsparksounds;
 
 typedef struct
 {

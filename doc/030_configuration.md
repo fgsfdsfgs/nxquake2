@@ -8,14 +8,14 @@ with the defaults and the options that can be set through the menu.
 
 ## Choosing a Renderer
 
-Yamagi Quake II ships with 3 renderers:
+Yamagi Quake II ships with 4 renderers:
 
 * The **OpenGL 3.2** renderer: This renderer was developed for the needs
   of modern graphics hardware and is usually the best choice for OpenGL
   3.2 capable graphics cards. It provides a very detailed look and feel,
-  matching the dark and dirty atmosphere on Stroggos. The texturing
-  renderer looks mostly the same on all GPU drivers. Depending on the
-  display the default lighting may be too bright or too dark, it can be
+  matching the dark and dirty atmosphere on Stroggos. The texture
+  rendering looks mostly the same on all GPU drivers. Depending on the
+  display, the default lighting may be too bright or too dark, it can be
   adjusted through the menu or through the *vid_gamma* cvar.
 * The **OpenGL 1.4** renderer: This is a slightly enhanced version of
   the original OpenGL renderer shipped in 1997 with the retail release.
@@ -77,7 +77,8 @@ have the choice:
 * Keep precise timings and the cost of a less accurate frame rate. With
   this approach the timings are optimal, e.g. movement like strafejumps
   and the clipping against walls are a precise as possible. But the
-  frame rate may be a little off, leading to tearing and missed frames.
+  frame rate may be a little off, leading to slight tearing and missed
+  frames.
 
 The first approach is the default. To switch over to precise timing the
 following console variables must be altered. There's no need to alter
@@ -97,8 +98,8 @@ the GPU driver and the preferences of the player.
   With `r_vsync` set to 1 that's the display refresh rate and otherwise
   the value of `vid_maxfps`. Yamagi Quake II enforces this restriction
   with an margin of 5%. For example, if `r_vsync` is set to 1 on an 60hz
-  display 60 * 0.95 = 57 FPS. if `cl_maxfps` is set too high (above 90)
-  the famous 125hz bug will trigger and the physics will be off. That
+  display 60 * 0.95 = 57 FPS. If `cl_maxfps` is set too high (above 90)
+  the infamous 125hz bug will trigger and the physics will be off. That
   may be desired.
 * `vid_displayrefreshrate` must be set to the framerate of the display.
   The default is `-1` which means autodetect. In most cases that's okay,
@@ -113,7 +114,8 @@ the GPU driver and the preferences of the player.
   desired target frame rate.
 
 Putting it all together we come up with three so to say standard
-configurations that can be used as a baseline for experiments:
+configurations that can be used as a baseline for experiments. For
+a 60hz display:
 
 * Precise frame rate and slightly imprecise timings:
   * `busywait` set to `1`.
@@ -200,7 +202,7 @@ one and OpenAL. Additionally some new sound effects were added. We
 recommend to stay with OpenAL, even if the stereo rendering is somewhat
 different to the old sound system. OpenAL is much more distortion free
 and more reliable, especially on modern platforms like Windows 10 or
-Linux with PulseAudio.
+Linux with PulseAudio / Pipewire.
 
 The new sound effects can be disabled with:
 
@@ -217,8 +219,10 @@ support colored lighting.
 
 General cvars:
 
-* `cl_lights` set to `0` disables the dynamic lightning.
-* `gl_texturemode` set to `GL_NEAREST_MIPMAP_LINEAR` disables the
+* `cl_lights`: Set to `0` to disable the dynamic lightning.
+
+Both OpenGL renderers:
+* `gl_texturemode`: Set to `GL_NEAREST_MIPMAP_LINEAR` to disable the
   texture filtering, giving a classic pixel look.
 
 The OpenGL 1.4 renderer:

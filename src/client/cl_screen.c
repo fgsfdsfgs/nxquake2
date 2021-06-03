@@ -499,6 +499,13 @@ SCR_DrawLoading(void)
 void
 SCR_RunConsole(void)
 {
+	/* src_conspeed must be a positiv integer,
+	   otherwise things go wrong. Clamp it. */
+	if (scr_conspeed->value < 0.1f)
+	{
+		Cvar_Set("scr_conspeed", "0.1");
+	}
+
 	/* decide on the height of the console */
 	if (cls.key_dest == key_console)
 	{
@@ -1519,7 +1526,7 @@ SCR_UpdateScreen(void)
 		numframes = 2;
 		separation[0] = -gl1_stereo_separation->value / 2;
 		separation[1] = +gl1_stereo_separation->value / 2;
-	}		
+	}
 	else
 	{
 		separation[0] = 0;
@@ -1536,6 +1543,7 @@ SCR_UpdateScreen(void)
 			/* loading plaque over black screen */
 			int w, h;
 
+			R_EndWorldRenderpass();
 			if(i == 0){
 				R_SetPalette(NULL);
 			}
@@ -1560,6 +1568,7 @@ SCR_UpdateScreen(void)
 					cl.cinematicpalette_active = false;
 				}
 
+				R_EndWorldRenderpass();
 				M_Draw();
 			}
 			else if (cls.key_dest == key_console)
@@ -1570,10 +1579,12 @@ SCR_UpdateScreen(void)
 					cl.cinematicpalette_active = false;
 				}
 
+				R_EndWorldRenderpass();
 				SCR_DrawConsole();
 			}
 			else
 			{
+				R_EndWorldRenderpass();
 				SCR_DrawCinematic();
 			}
 		}

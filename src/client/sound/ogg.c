@@ -17,10 +17,10 @@
  *
  * =======================================================================
  *
- * This file implements an interface to libvorbis for decoding
+ * This file implements an interface to stb_vorbis.c for decoding
  * OGG/Vorbis files. Strongly spoken this file isn't part of the sound
  * system but part of the main client. It justs converts Vorbis streams
- * into normal, raw Wave stream which are injected into the backends as 
+ * into normal, raw Wave stream which are injected into the backends as
  * if they were normal "raw" samples. At this moment only background
  * music playback and in theory .cin movie file playback is supported.
  *
@@ -51,7 +51,7 @@ static ogg_status_t ogg_status;   /* Status indicator. */
 static stb_vorbis *ogg_file;      /* Ogg Vorbis file. */
 static qboolean ogg_started;      /* Initialization flag. */
 
-enum { MAX_NUM_OGGTRACKS = 32 };
+enum { MAX_NUM_OGGTRACKS = 128 };
 static char* ogg_tracks[MAX_NUM_OGGTRACKS];
 static int ogg_maxfileindex;
 
@@ -201,9 +201,8 @@ OGG_InitTrackList(void)
 			}
 
 			// the GOG case: music/Track02.ogg to Track21.ogg
-			int gogTrack = getMappedGOGtrack(8, gameType);
-
-			snprintf(testFileName, MAX_OSPATH, "%sTrack%02i.ogg", fullMusicPath, gogTrack);
+			snprintf(testFileName, MAX_OSPATH, "%sTrack%02i.ogg",
+				fullMusicPath, getMappedGOGtrack(8, gameType));
 
 			if(Sys_IsFile(testFileName))
 			{
@@ -240,13 +239,13 @@ static OGG_Read(void)
 	short samples[4096] = {0};
 
 	int read_samples = stb_vorbis_get_samples_short_interleaved(ogg_file, ogg_file->channels, samples,
-		sizeof(samples) / ogg_file->channels);
+		sizeof(samples) / sizeof(short));
 
 	if (read_samples > 0)
 	{
 		ogg_numsamples += read_samples;
 
-		S_RawSamples(read_samples, ogg_file->sample_rate, ogg_file->channels, ogg_file->channels,
+		S_RawSamples(read_samples, ogg_file->sample_rate, sizeof(short), ogg_file->channels,
 			(byte *)samples, ogg_volume->value);
 	}
 	else

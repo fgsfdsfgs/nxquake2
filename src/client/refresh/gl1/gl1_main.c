@@ -98,6 +98,7 @@ cvar_t *gl_lightmap;
 cvar_t *gl_shadows;
 cvar_t *gl1_stencilshadow;
 cvar_t *r_mode;
+cvar_t *r_fixsurfsky;
 
 cvar_t *r_customwidth;
 cvar_t *r_customheight;
@@ -969,7 +970,7 @@ R_RenderView(refdef_t *fd)
 						// Decode the colour name from its character.
 						for (eye = 0; eye < 2; ++eye) {
 							colour = 0;
-							switch (toupper(gl1_stereo_anaglyph_colors->string[eye])) {
+							switch (toupper((unsigned char)gl1_stereo_anaglyph_colors->string[eye])) {
 								case 'B': ++colour; // 001 Blue
 								case 'G': ++colour; // 010 Green
 								case 'C': ++colour; // 011 Cyan
@@ -1224,7 +1225,7 @@ R_Register(void)
 	r_modulate = ri.Cvar_Get("r_modulate", "1", CVAR_ARCHIVE);
 	r_mode = ri.Cvar_Get("r_mode", "4", CVAR_ARCHIVE);
 	gl_lightmap = ri.Cvar_Get("gl_lightmap", "0", 0);
-	gl_shadows = ri.Cvar_Get("gl_shadows", "0", CVAR_ARCHIVE);
+	gl_shadows = ri.Cvar_Get("r_shadows", "0", CVAR_ARCHIVE);
 	gl1_stencilshadow = ri.Cvar_Get("gl1_stencilshadow", "0", CVAR_ARCHIVE);
 	gl1_dynamic = ri.Cvar_Get("gl1_dynamic", "1", 0);
 	gl_nobind = ri.Cvar_Get("gl_nobind", "0", 0);
@@ -1239,11 +1240,12 @@ R_Register(void)
 	gl_cull = ri.Cvar_Get("gl_cull", "1", 0);
 	gl1_polyblend = ri.Cvar_Get("gl1_polyblend", "1", 0);
 	gl1_flashblend = ri.Cvar_Get("gl1_flashblend", "0", 0);
+	r_fixsurfsky = ri.Cvar_Get("r_fixsurfsky", "0", CVAR_ARCHIVE);
 
 	gl_texturemode = ri.Cvar_Get("gl_texturemode", "GL_LINEAR_MIPMAP_NEAREST", CVAR_ARCHIVE);
 	gl1_texturealphamode = ri.Cvar_Get("gl1_texturealphamode", "default", CVAR_ARCHIVE);
 	gl1_texturesolidmode = ri.Cvar_Get("gl1_texturesolidmode", "default", CVAR_ARCHIVE);
-	gl_anisotropic = ri.Cvar_Get("gl_anisotropic", "0", CVAR_ARCHIVE);
+	gl_anisotropic = ri.Cvar_Get("r_anisotropic", "0", CVAR_ARCHIVE);
 	r_lockpvs = ri.Cvar_Get("r_lockpvs", "0", 0);
 
 	gl1_palettedtexture = ri.Cvar_Get("gl1_palettedtexture", "0", CVAR_ARCHIVE);
@@ -1259,12 +1261,12 @@ R_Register(void)
 
 	r_customwidth = ri.Cvar_Get("r_customwidth", "1024", CVAR_ARCHIVE);
 	r_customheight = ri.Cvar_Get("r_customheight", "768", CVAR_ARCHIVE);
-	gl_msaa_samples = ri.Cvar_Get ( "gl_msaa_samples", "0", CVAR_ARCHIVE );
+	gl_msaa_samples = ri.Cvar_Get ( "r_msaa_samples", "0", CVAR_ARCHIVE );
 
-	gl_retexturing = ri.Cvar_Get("gl_retexturing", "1", CVAR_ARCHIVE);
+	gl_retexturing = ri.Cvar_Get("r_retexturing", "1", CVAR_ARCHIVE);
 
 	/* don't bilerp characters and crosshairs */
-	gl_nolerp_list = ri.Cvar_Get("gl_nolerp_list", "pics/conchars.pcx pics/ch1.pcx pics/ch2.pcx pics/ch3.pcx", 0);
+	gl_nolerp_list = ri.Cvar_Get("r_nolerp_list", "pics/conchars.pcx pics/ch1.pcx pics/ch2.pcx pics/ch3.pcx", 0);
 
 	gl1_stereo = ri.Cvar_Get( "gl1_stereo", "0", CVAR_ARCHIVE );
 	gl1_stereo_separation = ri.Cvar_Get( "gl1_stereo_separation", "-0.4", CVAR_ARCHIVE );
@@ -1283,7 +1285,7 @@ R_Register(void)
 static int
 SetMode_impl(int *pwidth, int *pheight, int mode, int fullscreen)
 {
-	R_Printf(PRINT_ALL, "setting mode %d:", mode);
+	R_Printf(PRINT_ALL, "Setting mode %d:", mode);
 
 	/* mode -1 is not in the vid mode table - so we keep the values in pwidth
 	   and pheight and don't even try to look up the mode info */
@@ -1303,7 +1305,7 @@ SetMode_impl(int *pwidth, int *pheight, int mode, int fullscreen)
 		}
 	}
 
-	R_Printf(PRINT_ALL, " %d %d\n", *pwidth, *pheight);
+	R_Printf(PRINT_ALL, " %dx%d (vid_fullscreen %i)\n", *pwidth, *pheight, fullscreen);
 
 	if (!ri.GLimp_InitGraphics(fullscreen, pwidth, pheight))
 	{
@@ -1320,9 +1322,6 @@ R_SetMode(void)
 	int fullscreen;
 
 	fullscreen = (int)vid_fullscreen->value;
-
-	vid_fullscreen->modified = false;
-	r_mode->modified = false;
 
 	/* a bit hackish approach to enable custom resolutions:
 	   Glimp_SetMode needs these values set for mode -1 */
@@ -1349,7 +1348,7 @@ R_SetMode(void)
 			if (gl_msaa_samples->value != 0.0f)
 			{
 				R_Printf(PRINT_ALL, "gl_msaa_samples was %d - will try again with gl_msaa_samples = 0\n", (int)gl_msaa_samples->value);
-				ri.Cvar_SetValue("gl_msaa_samples", 0.0f);
+				ri.Cvar_SetValue("r_msaa_samples", 0.0f);
 				gl_msaa_samples->modified = false;
 
 				if ((err = SetMode_impl(&vid.width, &vid.height, r_mode->value, 0)) == rserr_ok)
@@ -1579,12 +1578,6 @@ void
 RI_BeginFrame(float camera_separation)
 {
 	gl_state.camera_separation = camera_separation;
-
-	/* change modes if necessary */
-	if (r_mode->modified)
-	{
-		vid_fullscreen->modified = true;
-	}
 
 	// force a vid_restart if gl1_stereo has been modified.
 	if ( gl_state.stereo_mode != gl1_stereo->value ) {
@@ -1877,6 +1870,17 @@ extern void RI_SetPalette(const unsigned char *palette);
 extern qboolean RI_IsVSyncActive(void);
 extern void RI_EndFrame(void);
 
+/*
+=====================
+RI_EndWorldRenderpass
+=====================
+*/
+static qboolean
+RI_EndWorldRenderpass( void )
+{
+	return true;
+}
+
 Q2_DLL_EXPORTED refexport_t
 GetRefAPI(refimport_t imp)
 {
@@ -1917,7 +1921,12 @@ GetRefAPI(refimport_t imp)
 
 	re.SetPalette = RI_SetPalette;
 	re.BeginFrame = RI_BeginFrame;
+	re.EndWorldRenderpass = RI_EndWorldRenderpass;
 	re.EndFrame = RI_EndFrame;
+
+    // Tell the client that we're unsing the
+	// new renderer restart API.
+    ri.Vid_RequestRestart(RESTART_NO);
 
 	return re;
 }

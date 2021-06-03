@@ -10,6 +10,7 @@
 # Base dependencies:                                     #
 #  - SDL 2.0                                             #
 #  - libGL                                               #
+#  - Vulkan headers                                      #
 #                                                        #
 # Optional dependencies:                                 #
 #  - CURL                                                #
@@ -18,10 +19,21 @@
 # Platforms:                                             #
 #  - FreeBSD                                             #
 #  - Linux                                               #
+#  - NetBSD                                              #
 #  - OpenBSD                                             #
 #  - OS X                                                #
 #  - Windows (MinGW)                                     #
 # ------------------------------------------------------ #
+
+# Variables
+# ---------
+
+# - ASAN: Builds with address sanitizer, includes DEBUG.
+# - DEBUG: Builds a debug build, forces -O0 and adds debug symbols.
+# - VERBOSE: Prints full compile, linker and misc commands.
+# - UBSAN: Builds with undefined behavior sanitizer, includes DEBUG.
+
+# ----------
 
 # User configurable options
 # -------------------------
@@ -81,6 +93,13 @@ endif
 
 # Detect the architecture
 ifeq ($(YQ2_OSTYPE), Windows)
+ifdef MINGW_CHOST
+ifeq ($(MINGW_CHOST), x86_64-w64-mingw32)
+YQ2_ARCH ?= x86_64
+else # i686-w64-mingw32
+YQ2_ARCH ?= i386
+endif
+else # windows, but MINGW_CHOST not defined
 ifdef PROCESSOR_ARCHITEW6432
 # 64 bit Windows
 YQ2_ARCH ?= $(PROCESSOR_ARCHITEW6432)
@@ -88,6 +107,7 @@ else
 # 32 bit Windows
 YQ2_ARCH ?= $(PROCESSOR_ARCHITECTURE)
 endif
+endif # windows but MINGW_CHOST not defined
 else
 # Normalize some abiguous YQ2_ARCH strings
 YQ2_ARCH ?= $(shell uname -m | sed -e 's/i.86/i386/' -e 's/amd64/x86_64/' -e 's/^arm.*/arm/')
@@ -109,6 +129,16 @@ else
 COMPILER := unknown
 endif
 
+# ASAN includes DEBUG
+ifdef ASAN
+DEBUG=1
+endif
+
+# UBSAN includes DEBUG
+ifdef UBSAN
+DEBUG=1
+endif
+
 # ----------
 
 # Base CFLAGS. These may be overridden by the environment.
@@ -116,6 +146,12 @@ endif
 # will likely break this crappy code.
 ifdef DEBUG
 CFLAGS ?= -O0 -g -Wall -pipe
+ifdef ASAN
+CFLAGS += -fsanitize=address
+endif
+ifdef UBSAN
+CFLAGS += -fsanitize=undefined
+endif
 else
 CFLAGS ?= -O2 -Wall -pipe -fomit-frame-pointer
 endif
@@ -126,7 +162,9 @@ endif
 #   to get it there...
 #  -fwrapv for defined integer wrapping. MSVC6 did this
 #   and the game code requires it.
-override CFLAGS += -std=gnu99 -fno-strict-aliasing -fwrapv
+#  -fvisibility=hidden to keep symbols hidden. This is
+#   mostly best practice and not really necessary.
+override CFLAGS += -std=gnu99 -fno-strict-aliasing -fwrapv -fvisibility=hidden
 
 # -MMD to generate header dependencies. Unsupported by
 #  the Clang shipped with OS X.
@@ -183,13 +221,12 @@ endif
 
 # ----------
 
-# If we're building with gcc for i386 let's define -ffloat-store.
-# This helps the old and crappy x87 FPU to produce correct values.
-# Would be nice if Clang had something comparable.
+# Using the default x87 float math on 32bit x86 causes rounding trouble
+# -ffloat-store could work around that, but the better solution is to
+# just enforce SSE - every x86 CPU since Pentium3 supports that
+# and this should even improve the performance on old CPUs
 ifeq ($(YQ2_ARCH), i386)
-ifeq ($(COMPILER), gcc)
-override CFLAGS += -ffloat-store
-endif
+override CFLAGS += -msse -mfpmath=sse
 endif
 
 # Force SSE math on x86_64. All sane compilers should do this
@@ -242,6 +279,8 @@ ifeq ($(YQ2_OSTYPE),Linux)
 INCLUDE ?= -I/usr/include
 else ifeq ($(YQ2_OSTYPE),FreeBSD)
 INCLUDE ?= -I/usr/local/include
+else ifeq ($(YQ2_OSTYPE),NetBSD)
+INCLUDE ?= -I/usr/X11R7/include -I/usr/pkg/include
 else ifeq ($(YQ2_OSTYPE),OpenBSD)
 INCLUDE ?= -I/usr/local/include
 else ifeq ($(YQ2_OSTYPE),Windows)
@@ -260,16 +299,30 @@ ifeq ($(YQ2_OSTYPE),Linux)
 LDFLAGS ?= -L/usr/lib
 else ifeq ($(YQ2_OSTYPE),FreeBSD)
 LDFLAGS ?= -L/usr/local/lib
+else ifeq ($(YQ2_OSTYPE),NetBSD)
+LDFLAGS ?= -L/usr/X11R7/lib -Wl,-R/usr/X11R7/lib -L/usr/pkg/lib -Wl,-R/usr/pkg/lib
 else ifeq ($(YQ2_OSTYPE),OpenBSD)
 LDFLAGS ?= -L/usr/local/lib
 else ifeq ($(YQ2_OSTYPE),Windows)
 LDFLAGS ?= -L/usr/lib
 endif
 
+# Link address sanitizer if requested.
+ifdef ASAN
+LDFLAGS += -fsanitize=address
+endif
+
+# Link undefined behavior sanitizer if requested.
+ifdef UBSAN
+LDFLAGS += -fsanitize=undefined
+endif
+
 # Required libraries.
 ifeq ($(YQ2_OSTYPE),Linux)
 override LDFLAGS += -lm -ldl -rdynamic
 else ifeq ($(YQ2_OSTYPE),FreeBSD)
+override LDFLAGS += -lm
+else ifeq ($(YQ2_OSTYPE),NetBSD)
 override LDFLAGS += -lm
 else ifeq ($(YQ2_OSTYPE),OpenBSD)
 override LDFLAGS += -lm
@@ -280,10 +333,6 @@ override LDFLAGS += -arch $(YQ2_ARCH)
 else ifeq ($(YQ2_OSTYPE), Haiku)
 override LDFLAGS += -lm -lnetwork
 endif
-
-# Keep symbols hidden.
-override CFLAGS += -fvisibility=hidden
-override LDFLAGS += -fvisibility=hidden
 
 ifneq ($(YQ2_OSTYPE), Darwin)
 ifneq ($(YQ2_OSTYPE), OpenBSD)
@@ -333,11 +382,12 @@ all: config client server game ref_gl1 ref_gl3 ref_soft
 config:
 	@echo "Build configuration"
 	@echo "============================"
+	@echo "YQ2_ARCH = $(YQ2_ARCH) COMPILER = $(COMPILER)"
 	@echo "WITH_CURL = $(WITH_CURL)"
 	@echo "WITH_OPENAL = $(WITH_OPENAL)"
+	@echo "WITH_RPATH = $(WITH_RPATH)"
 	@echo "WITH_SYSTEMWIDE = $(WITH_SYSTEMWIDE)"
 	@echo "WITH_SYSTEMDIR = $(WITH_SYSTEMDIR)"
-	@echo "WITH_RPATH = $(WITH_RPATH)"
 	@echo "============================"
 	@echo ""
 
@@ -437,6 +487,11 @@ release/quake2 : CFLAGS += -DHAVE_EXECINFO
 endif
 
 ifeq ($(YQ2_OSTYPE), FreeBSD)
+release/quake2 : CFLAGS += -DHAVE_EXECINFO
+release/quake2 : LDFLAGS += -lexecinfo
+endif
+
+ifeq ($(YQ2_OSTYPE), NetBSD)
 release/quake2 : CFLAGS += -DHAVE_EXECINFO
 release/quake2 : LDFLAGS += -lexecinfo
 endif
@@ -956,18 +1011,18 @@ GAME_OBJS = $(patsubst %,build/baseq2/%,$(GAME_OBJS_))
 
 # Generate header dependencies.
 CLIENT_DEPS= $(CLIENT_OBJS:.o=.d)
+GAME_DEPS= $(GAME_OBJS:.o=.d)
 REFGL1_DEPS= $(REFGL1_OBJS:.o=.d)
 REFGL3_DEPS= $(REFGL3_OBJS:.o=.d)
 REFSOFT_DEPS= $(REFSOFT_OBJS:.o=.d)
 SERVER_DEPS= $(SERVER_OBJS:.o=.d)
-GAME_DEPS= $(GAME_OBJS:.o=.d)
 
 # Suck header dependencies in.
 -include $(CLIENT_DEPS)
+-include $(GAME_DEPS)
 -include $(REFGL1_DEPS)
 -include $(REFGL3_DEPS)
 -include $(SERVER_DEPS)
--include $(GAME_DEPS)
 
 # ----------
 
@@ -989,7 +1044,7 @@ endif
 # release/q2ded
 ifeq ($(YQ2_OSTYPE), Windows)
 release/q2ded.exe : $(SERVER_OBJS) icon
-	@echo "===> LD $@.exe"
+	@echo "===> LD $@"
 	${Q}$(CC) build/icon/icon.res $(SERVER_OBJS) $(LDFLAGS) $(SDLLDFLAGS) -o $@
 	$(Q)strip $@
 else

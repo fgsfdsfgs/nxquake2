@@ -1104,7 +1104,7 @@ Q_strlwr ( char *s )
 
 	while ( *s )
 	{
-		*s = tolower( *s );
+		*s = tolower( (unsigned char)*s );
 		s++;
 	}
 
@@ -1194,6 +1194,12 @@ FILE *Q_fopen(const char *file, const char *mode)
 	return fopen(file, mode);
 }
 #endif
+
+int
+Q_sort_strcomp(const void *s1, const void *s2)
+{
+	return strcmp(*(char **)s1, *(char **)s2);
+}
 
 /*
  * =====================================================================
@@ -1350,7 +1356,12 @@ Info_SetValueForKey(char *s, char *key, char *value)
 	int c;
 	int maxsize = MAX_INFO_STRING;
 
-	if (strstr(key, "\\") || strstr(value, "\\"))
+	if (!key)
+	{
+		return;
+	}
+
+	if (strstr(key, "\\") || (value && strstr(value, "\\")))
 	{
 		Com_Printf("Can't use keys or values with a \\\n");
 		return;
@@ -1362,13 +1373,13 @@ Info_SetValueForKey(char *s, char *key, char *value)
 		return;
 	}
 
-	if (strstr(key, "\"") || strstr(value, "\""))
+	if (strstr(key, "\"") || (value && strstr(value, "\"")))
 	{
 		Com_Printf("Can't use keys or values with a \"\n");
 		return;
 	}
 
-	if ((strlen(key) > MAX_INFO_KEY - 1) || (strlen(value) > MAX_INFO_KEY - 1))
+	if ((strlen(key) > MAX_INFO_KEY - 1) || (value && (strlen(value) > MAX_INFO_KEY - 1)))
 	{
 		Com_Printf("Keys and values must be < 64 characters.\n");
 		return;

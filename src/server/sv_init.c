@@ -123,7 +123,7 @@ SV_CreateBaseline(void)
 }
 
 void
-SV_CheckForSavegame(void)
+SV_CheckForSavegame(qboolean isautosave)
 {
 	char name[MAX_OSPATH];
 	FILE *f;
@@ -155,7 +155,7 @@ SV_CheckForSavegame(void)
 	/* get configstrings and areaportals */
 	SV_ReadLevelFile();
 
-	if (!sv.loadgame)
+	if (!sv.loadgame || (sv.loadgame && isautosave))
 	{
 		/* coming back to a level after being in a different
 		   level, so run it for ten seconds */
@@ -179,7 +179,7 @@ SV_CheckForSavegame(void)
  */
 void
 SV_SpawnServer(char *server, char *spawnpoint, server_state_t serverstate,
-		qboolean attractloop, qboolean loadgame)
+		qboolean attractloop, qboolean loadgame, qboolean isautosave)
 {
 	int i;
 	unsigned checksum;
@@ -295,7 +295,7 @@ SV_SpawnServer(char *server, char *spawnpoint, server_state_t serverstate,
 	SV_CreateBaseline();
 
 	/* check for a savegame */
-	SV_CheckForSavegame();
+	SV_CheckForSavegame(isautosave);
 
 	/* set serverinfo variable */
 	Cvar_FullSet("mapname", sv.name, CVAR_SERVERINFO | CVAR_NOSET);
@@ -333,6 +333,12 @@ SV_InitGame(void)
 
 	svs.initialized = true;
 
+	if (Cvar_VariableValue("singleplayer"))
+	{
+		Cvar_FullSet("coop", "0", CVAR_SERVERINFO | CVAR_LATCH);
+		Cvar_FullSet("deathmatch", "0", CVAR_SERVERINFO | CVAR_LATCH);
+	}
+
 	if (Cvar_VariableValue("coop") && Cvar_VariableValue("deathmatch"))
 	{
 		Com_Printf("Deathmatch and Coop both set, disabling Coop\n");
@@ -343,9 +349,12 @@ SV_InitGame(void)
 	   so unless they explicity set coop, force it to deathmatch */
 	if (dedicated->value)
 	{
-		if (!Cvar_VariableValue("coop"))
+		if (!Cvar_VariableValue("singleplayer"))
 		{
-			Cvar_FullSet("deathmatch", "1", CVAR_SERVERINFO | CVAR_LATCH);
+			if (!Cvar_VariableValue("coop"))
+			{
+				Cvar_FullSet("deathmatch", "1", CVAR_SERVERINFO | CVAR_LATCH);
+			}
 		}
 	}
 
@@ -358,23 +367,46 @@ SV_InitGame(void)
 		}
 		else if (maxclients->value > MAX_CLIENTS)
 		{
-			Cvar_FullSet("maxclients", va("%i",
-						MAX_CLIENTS), CVAR_SERVERINFO | CVAR_LATCH);
+			Cvar_FullSet("maxclients", va("%i", MAX_CLIENTS), CVAR_SERVERINFO | CVAR_LATCH);
 		}
+
+		Cvar_FullSet("singleplayer", "0", 0);
+	}
+	else if (Cvar_VariableValue("coop"))
+	{
+		if (maxclients->value <= 1)
+		{
+			Cvar_FullSet("maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH);
+		}
+		Cvar_FullSet("singleplayer", "0", 0);
 	}
 	else /* non-deathmatch, non-coop is one player */
 	{
 		Cvar_FullSet("maxclients", "1", CVAR_SERVERINFO | CVAR_LATCH);
+		Cvar_FullSet("singleplayer", "1", 0);
 	}
 
 	svs.spawncount = randk();
 	svs.clients = Z_Malloc(sizeof(client_t) * maxclients->value);
 	svs.num_client_entities = maxclients->value * UPDATE_BACKUP * 64;
-	svs.client_entities =
-		Z_Malloc( sizeof(entity_state_t) * svs.num_client_entities);
+	svs.client_entities = Z_Malloc( sizeof(entity_state_t) * svs.num_client_entities);
 
 	/* init network stuff */
-	NET_Config((maxclients->value > 1));
+	if (dedicated->value)
+	{
+		if (Cvar_VariableValue("singleplayer"))
+		{
+			NET_Config(true);
+		}
+		else
+		{
+			NET_Config((maxclients->value > 1));
+		}
+	}
+	else
+	{
+		NET_Config((maxclients->value > 1));
+	}
 
 	/* heartbeats will always be sent to the id master */
 	svs.last_heartbeat = -99999; /* send immediately */
@@ -406,7 +438,7 @@ SV_InitGame(void)
  *  map tram.cin+jail_e3
  */
 void
-SV_Map(qboolean attractloop, char *levelstring, qboolean loadgame)
+SV_Map(qboolean attractloop, char *levelstring, qboolean loadgame, qboolean isautosave)
 {
 	char level[MAX_QPATH];
 	char *ch;
@@ -433,7 +465,10 @@ SV_Map(qboolean attractloop, char *levelstring, qboolean loadgame)
 	}
 	else
 	{
-		Cvar_Set("nextserver", "");
+		// use next demo command if list of map commands as empty
+		Cvar_Set("nextserver", (char*)Cvar_VariableString("nextdemo"));
+		// and cleanup nextdemo
+		Cvar_Set("nextdemo", "");
 	}
 
 	/* hack for end game screen in coop mode */
@@ -470,7 +505,7 @@ SV_Map(qboolean attractloop, char *levelstring, qboolean loadgame)
 		SCR_BeginLoadingPlaque(); /* for local system */
 #endif
 		SV_BroadcastCommand("changing\n");
-		SV_SpawnServer(level, spawnpoint, ss_cinematic, attractloop, loadgame);
+		SV_SpawnServer(level, spawnpoint, ss_cinematic, attractloop, loadgame, isautosave);
 	}
 	else if ((l > 4) && !strcmp(level + l - 4, ".dm2"))
 	{
@@ -478,7 +513,7 @@ SV_Map(qboolean attractloop, char *levelstring, qboolean loadgame)
 		SCR_BeginLoadingPlaque(); /* for local system */
 #endif
 		SV_BroadcastCommand("changing\n");
-		SV_SpawnServer(level, spawnpoint, ss_demo, attractloop, loadgame);
+		SV_SpawnServer(level, spawnpoint, ss_demo, attractloop, loadgame, isautosave);
 	}
 	else if ((l > 4) && !strcmp(level + l - 4, ".pcx"))
 	{
@@ -486,7 +521,7 @@ SV_Map(qboolean attractloop, char *levelstring, qboolean loadgame)
 		SCR_BeginLoadingPlaque(); /* for local system */
 #endif
 		SV_BroadcastCommand("changing\n");
-		SV_SpawnServer(level, spawnpoint, ss_pic, attractloop, loadgame);
+		SV_SpawnServer(level, spawnpoint, ss_pic, attractloop, loadgame, isautosave);
 	}
 	else
 	{
@@ -495,7 +530,7 @@ SV_Map(qboolean attractloop, char *levelstring, qboolean loadgame)
 #endif
 		SV_BroadcastCommand("changing\n");
 		SV_SendClientMessages();
-		SV_SpawnServer(level, spawnpoint, ss_game, attractloop, loadgame);
+		SV_SpawnServer(level, spawnpoint, ss_game, attractloop, loadgame, isautosave);
 		Cbuf_CopyToDefer();
 	}
 

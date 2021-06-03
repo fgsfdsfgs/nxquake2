@@ -38,6 +38,7 @@ typedef struct
 /* An ugly hack to rewrite CVARs loaded from config.cfg */
 replacement_t replacements[] = {
 	{"cd_shuffle", "ogg_shuffle"},
+	{"cl_anglekicks", "cl_kickangles"},
 	{"cl_drawfps", "cl_showfps"},
 	{"gl_drawentities", "r_drawentities"},
 	{"gl_drawworld", "r_drawworld"},
@@ -82,6 +83,11 @@ replacement_t replacements[] = {
 	{"gl_texturealphamode", "gl1_texturealphamode"},
 	{"gl_texturesolidmode", "gl1_texturesolidmode"},
 	{"gl_ztrick", "gl1_ztrick"},
+	{"gl_msaa_samples", "r_msaa_samples"},
+	{"gl_nolerp_list", "r_nolerp_list"},
+	{"gl_retexturing", "r_retexturing"},
+	{"gl_shadows", "r_shadows"},
+	{"gl_anisotropic", "r_anisotropic"},
 	{"intensity", "gl1_intensity"}
 };
 
@@ -138,32 +144,34 @@ Cvar_FindVar(const char *var_name)
 static qboolean
 Cvar_IsFloat(const char *s)
 {
-    int c, dot = '.';
+	int dot = '.';
 
-    if (*s == '-')
+	if (*s == '-')
 	{
-        s++;
-    }
+		s++;
+	}
 
-    if (!*s)
+	if (!*s)
 	{
-        return false;
-    }
+		return false;
+	}
 
-    do {
-        c = *s++;
+	do {
+		int c;
 
-        if (c == dot)
+		c = *s++;
+
+		if (c == dot)
 		{
-            dot = 0;
-        }
-		else if (!(c >= '0' || c <= '9'))
+			dot = 0;
+		}
+		else if (c < '0' || c > '9')
 		{
-            return false;
-        }
-    } while (*s);
+			return false;
+		}
+	} while (*s);
 
-    return true;
+	return true;
 }
 
 float
@@ -514,7 +522,7 @@ void
 Cvar_Set_f(void)
 {
 	char *firstarg;
-	int c, flags, i;
+	int c, i;
 
 	c = Cmd_Argc();
 
@@ -537,6 +545,8 @@ Cvar_Set_f(void)
 
 	if (c == 4)
 	{
+		int flags;
+
 		if (!strcmp(Cmd_Argv(3), "u"))
 		{
 			flags = CVAR_USERINFO;

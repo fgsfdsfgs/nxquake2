@@ -25,12 +25,12 @@ missing assets or even crashes.
 
 The easiest way to install Yamagi Quake II is to start with the patch.
 Please note that the patch is **required** for all full versions of the
-game. Without the patch the game won't work correctly!
+game. Without the patch the game will not work correctly!
 
-1. Download the patch from our mirror or somewhere else. Its MD5
+1. Download the patch from our mirror or somewhere else. The MD5
    checksum is `490557d4a90ff346a175d865a2bade87`:
    https://deponie.yamagi.org/quake2/idstuff/q2-3.20-x86-full-ctf.exe
-2. Extract the patch into an empty directory. The patch comes as an
+2. Extract the patch into an empty directory. The patch comes as a
    self-extracting ZIP file. On Windows it can be extracted by double
    clicking on it, on other systems an archiver or the *unzip* command
    can be used.
@@ -78,7 +78,7 @@ The MD5 checksums of the pakfiles are:
 
 The retail releases of Quake II and both addons contain up to 11 Audio
 CD tracks as soundtrack. Since modern computers lack the ability for
-direct CD playback Yamagi Quake II reads the music from OGG/Vorbis
+direct CD playback, Yamagi Quake II reads the music from OGG/Vorbis
 files.
 
 Later Quake II releases, for example the one included with Quake IV and
@@ -102,9 +102,9 @@ may be supported in the future.
    so on. On both the Quake II and the Addon CDs track 01 is the data
    track and thus can't be ripped.
 4. Put these files into the corresponding subdirectory:
-	* baseq2/music for Quake II.
-	* xatrix/music for The Reckoning.
-	* rogue/music for Ground Zero.
+	* *baseq2/music* for Quake II.
+	* *xatrix/music* for The Reckoning.
+	* *rogue/music* for Ground Zero.
 
 
 #### Using a Shell Script
@@ -112,8 +112,9 @@ may be supported in the future.
 An easy way to extract the music on unixoid platforms (BSD, Linux and
 MacOS) is to use *stuff/cdripper.sh*, a simple shellscript. It needs
 *cdparanoia* and *oggenc* (from the *vorbis-tools* package) installed.
-Use the package manager (apt, dnf, homebrew, pkg, ...) to install them.
-Just execute the script and copy the resulting *music/* directory to:
+Use the package manager (apt, dnf, homebrew, pacman, pkg, ...) to
+install them.  Just execute the script and copy the resulting *music/*
+directory to:
   * *baseq2/* for Quake II.
   * *xatrix/* for The Reckoning.
   * *rogue/* for Ground Zero.
@@ -129,8 +130,45 @@ just *music/*, next to *baseq2/*. **Not** inside *baseq2/*.
 ### Alternate Startup Configuration
 
 Yamagi Quake II ships with an alternative startup config that overrides
-some global settings to saner defaults. To use is copy *stuff/yq2.cfg*
+some global settings to saner defaults. To use it copy *stuff/yq2.cfg*
 into the *baseq2/* directory.
+
+
+### Fixed Map Data Files
+
+As an optional feature, Yamagi Quake II provides fixed map data files
+(.ent files). These files provide a replacement entity list in order
+to fix some map bugs that have been discovered by players over the
+years.
+
+These fixes include fixes for bad monster counts in some maps /
+difficulty settings, fixing broken spawn chains that made it impossible
+to spawn some monsters, removing DM-only items that spawn in unreachable
+areas in single player /co-op, and so on. You can find detailed
+changelogs for each map by opening the .ent files with a text editor and
+reading the comment section at the top (lines starting with "//").
+
+
+#### Download And Setup
+
+1. Download the .ent files from the yquake2 repositories on GitHub.
+   * **baseq2**: yquake2/yquake2/stuff/mapfixes/baseq2/
+   * **juggernaut**: yquake2/yquake2/stuff/mapfixes/juggernaut/
+   * **xatrix**: yquake2/xatrix/stuff/mapfixes/
+   * **rogue**: yquake2/rogue/stuff/mapfixes/
+   * **zaero**: yquake2/zaero/stuff/mapfixes/
+2. Once you have the .ent files you want, put them in the respective
+   *maps/* sub-folder. So *xatrix* .ent files should go into your local
+   *xatrix/maps/* folder (create this folder if it does not exist).
+3. You will see a notification message in the console if an .ent file
+   was loaded. If you see this message, you know the map fixes are in
+   effect.
+
+
+#### Reporting Map Bugs
+
+If you know of any map bugs that are not addressed here, by all means
+report them to us through our GitHub repositories.
 
 
 ## The Demo Version
@@ -145,8 +183,8 @@ no soundtrack.
 1. Download the demo from our mirror or somewhere else. Its MD5
    checksum is `4d1cd4618e80a38db59304132ea0856c`:
    https://deponie.yamagi.org/quake2/idstuff/q2-314-demo-x86.exe
-2. Extract the downloaded file. It's an ordinary, self-extract ZIP
-   archive. On Windows it can be extracted by double clicking on it, on
+2. Extract the downloaded file. It's a self-extract ZIP archive.
+   On Windows it can be extracted by double clicking on it, on
    other system an archiver or the *unzip* command can be used.
 3. Create a new directory and a subdirectory *baseq2/* in it.
 4. Copy the *pak0.pak* and the *players/* subdirectory from the
@@ -186,7 +224,7 @@ There're two executables:
 
 * *yquake2.exe*: This is main executable and should be preferred.
 * *quake.exe*: This is just a wrapper to stay compatible with existing
-  setups. For technical reasons *quake.exe* may not start in foreground
+  setups. For technical reasons *quake.exe* may not start in foreground,
   but in background!
 
 If Windows Defender is activated, that's the default on Windows 8 and
@@ -219,8 +257,8 @@ To compile Yamagi Quake II from source the following dependencies
 * A GCC compatible compiler like *gcc*, *clang* or *mingw*.
 * A LibGL implementation with system headers.
 * An OpenAL implementation, *openal-soft* is highly recommended.
-* SDL 2.0.
 * libcurl.
+* SDL 2.0.
 
 While Yamagi Quake II ships with an CMakeFile.txt using the GNU Makefile
 for release builds is recommended. The GNU Makefile offers more options
@@ -233,7 +271,7 @@ On Windows a MinGW environment is needed. A preconfigured environment
 with all necessary dependencies and compatibles compilers can be found
 at: https://deponie.yamagi.org/quake2/windows/buildenv/
 
-The environment must be extracted into *C:\MSYS2\*. Other directores
+The environment must be extracted into *C:\MSYS2*. Other directores
 will likely work, but are unsupported. So don't complain if you
 experience problems. Either the 32 bit version can be started through
 *C:\MSYS2\msys32.exe* or the 64 bit version through
@@ -247,6 +285,8 @@ Studio.
 
 The build dependencies can be installed with:
 
+* On Arch Linux based distributions: `pacman -S base-devel mesa openal
+  curl sdl2`
 * On Debian based distributions: `apt install build-essential
   libgl1-mesa-dev libsdl2-dev libopenal-dev libcurl4-openssl-dev`
 * On FreeBSD: `pkg install gmake libGL sdl2 openal-soft curl`

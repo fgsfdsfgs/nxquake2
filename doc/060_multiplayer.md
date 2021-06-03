@@ -1,6 +1,6 @@
 # Multiplayer Servers
 
-Generally running a Yamagi Quake II server is the same as running a
+In general running a Yamagi Quake II server is the same as running a
 Vanilla Quake2 server, so the old guides should still apply.
 
 One thing to keep in mind is that the server must be restarted at least
@@ -11,7 +11,7 @@ overflows, leading to all kinds of trouble.
 This problem has always existed in Quake II and is not fixable (at least
 not without breaking compatibility with the existing network protocol),
 but back in Win9x days this was less of a problem because Windows
-crashed frequently anyways and  Win9x had the same bug and crashed after
+crashed frequently anyways and Win9x had the same bug and crashed after
 49 days or so...
 
 Apart from this, we'll only document changes/additions here.
@@ -50,7 +50,7 @@ or `.pk3` that contains the needed data. If you're using a `.pak` or
 One way is to have one file list for each map that's running on your
 server.  If your server is rotating between `maps/foo.bsp` and
 `maps/bar.bsp`, you'd have `http://example.com/q2data/maps/foo.filelist`
-and `http://example.com/q2data/maps/foo.filelist`.
+and `http://example.com/q2data/maps/bar.filelist`.
 
 A file list is a plain text file that lists one file path per line
 that's to be downloaded. Those paths are relative to the server base
