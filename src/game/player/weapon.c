@@ -168,13 +168,53 @@ PlayerNoise(edict_t *who, vec3_t where, int type)
 	gi.linkentity(noise);
 }
 
+void
+Broadcast_Weapon(gitem_t *weapon, gitem_t *ammo, int ammo_quantity)
+{
+	int i, index;
+	edict_t *player;
+	qboolean showicon;
+	index = ITEM_INDEX(weapon);
+	for (i = 0; i < game.maxclients; ++i)
+	{
+		player = &g_edicts[1 + i];
+		showicon = false;
+		if (player->inuse && player->client && !player->client->resp.spectator)
+		{
+			/* only give the weapon separately if it's not also its own ammo */
+			if (!player->client->pers.inventory[index] && weapon != ammo)
+			{
+				player->client->pers.inventory[index]++;
+				showicon = true;
+			}
+			/* give the broadcast receiver some ammo if possible */
+			if ((int)dmflags->value & DF_INFINITE_AMMO)
+			{
+				showicon = Add_Ammo(player, ammo, 1000) || showicon;
+			}
+			else
+			{
+				showicon = Add_Ammo(player, ammo, ammo_quantity) || showicon;
+			}
+			if (showicon)
+			{
+				/* pickup indication */
+				player->client->bonus_alpha = 0.15;
+				player->client->ps.stats[STAT_PICKUP_ICON] =
+					gi.imageindex(weapon->icon);
+				player->client->ps.stats[STAT_PICKUP_STRING] =
+					CS_ITEMS + index;
+				player->client->pickup_msg_time = level.time + 3.0;
+			}
+		}
+	}
+}
+
 qboolean
 Pickup_Weapon(edict_t *ent, edict_t *other)
 {
-	int index, quantity, i;
+	int index, quantity;
 	gitem_t *ammo;
-	edict_t *player;
-	qboolean showicon = false;
 
 	if (!ent || !other)
 	{
@@ -198,42 +238,9 @@ Pickup_Weapon(edict_t *ent, edict_t *other)
 
 	other->client->pers.inventory[index]++;
 
-	if (coop->value)
+	if (coop->value && coop_broadcast_weapons->value)
 	{
-		if (coop_broadcast_weapons->value)
-		{
-			for (i = 0; i < game.maxclients; ++i)
-			{
-				player = &g_edicts[1 + i];
-				if (player->inuse && player->client && !player->client->resp.spectator)
-				{
-					if (!player->client->pers.inventory[index])
-					{
-						player->client->pers.inventory[index]++;
-						showicon = true;
-					}
-					/* give the broadcast receiver some ammo if possible */
-					if ((int)dmflags->value & DF_INFINITE_AMMO)
-					{
-						showicon = Add_Ammo(player, ammo, 1000);
-					}
-					else
-					{
-						showicon = Add_Ammo(player, ammo, quantity);
-					}
-					if (showicon)
-					{
-						/* pickup indication */
-						player->client->bonus_alpha = 0.15;
-						player->client->ps.stats[STAT_PICKUP_ICON] =
-							gi.imageindex(ent->item->icon);
-						player->client->ps.stats[STAT_PICKUP_STRING] =
-							CS_ITEMS + ITEM_INDEX(ent->item);
-						player->client->pickup_msg_time = level.time + 3.0;
-					}
-				}
-			}
-		}
+		Broadcast_Weapon(ent->item, ammo, quantity);
 	}
 
 	if (!(ent->spawnflags & DROPPED_ITEM))

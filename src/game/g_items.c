@@ -749,6 +749,11 @@ Pickup_Ammo(edict_t *ent, edict_t *other)
 		return false;
 	}
 
+	if (coop->value && coop_broadcast_weapons->value && weapon)
+	{
+		Broadcast_Weapon(ent->item, ent->item, count);
+	}
+
 	if (weapon && !oldcount)
 	{
 		if ((other->client->pers.weapon != ent->item) &&
