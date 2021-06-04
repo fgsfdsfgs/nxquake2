@@ -174,6 +174,7 @@ Pickup_Weapon(edict_t *ent, edict_t *other)
 	int index, quantity, i;
 	gitem_t *ammo;
 	edict_t *player;
+	qboolean showicon = false;
 
 	if (!ent || !other)
 	{
@@ -204,25 +205,32 @@ Pickup_Weapon(edict_t *ent, edict_t *other)
 			for (i = 0; i < game.maxclients; ++i)
 			{
 				player = &g_edicts[1 + i];
-				if (player->inuse && player->client && !player->client->resp.spectator && !player->client->pers.inventory[index])
+				if (player->inuse && player->client && !player->client->resp.spectator)
 				{
-					player->client->pers.inventory[index]++;
-					/* give the broadcast receiver some ammo since this is their first pickup */
+					if (!player->client->pers.inventory[index])
+					{
+						player->client->pers.inventory[index]++;
+						showicon = true;
+					}
+					/* give the broadcast receiver some ammo if possible */
 					if ((int)dmflags->value & DF_INFINITE_AMMO)
 					{
-						Add_Ammo(player, ammo, 1000);
+						showicon = Add_Ammo(player, ammo, 1000);
 					}
 					else
 					{
-						Add_Ammo(player, ammo, quantity);
+						showicon = Add_Ammo(player, ammo, quantity);
 					}
-					/* pickup indication */
-					player->client->bonus_alpha = 0.15;
-					player->client->ps.stats[STAT_PICKUP_ICON] =
-						gi.imageindex(ent->item->icon);
-					player->client->ps.stats[STAT_PICKUP_STRING] =
-						CS_ITEMS + ITEM_INDEX(ent->item);
-					player->client->pickup_msg_time = level.time + 3.0;
+					if (showicon)
+					{
+						/* pickup indication */
+						player->client->bonus_alpha = 0.15;
+						player->client->ps.stats[STAT_PICKUP_ICON] =
+							gi.imageindex(ent->item->icon);
+						player->client->ps.stats[STAT_PICKUP_STRING] =
+							CS_ITEMS + ITEM_INDEX(ent->item);
+						player->client->pickup_msg_time = level.time + 3.0;
+					}
 				}
 			}
 		}
