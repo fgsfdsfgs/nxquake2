@@ -895,6 +895,12 @@ player_die(edict_t *self, edict_t *inflictor, edict_t *attacker,
 			keep_weapons = (coop_keep_weapons->value > 0);
 			keep_items = (coop_keep_powerups->value > 0);
 			keep_armor = (coop_keep_armor->value > 0);
+			/* if keep weapons is on, remember last held weapon */
+			if (keep_weapons)
+			{
+				self->client->resp.coop_respawn.weapon = self->client->pers.weapon;
+				self->client->resp.coop_respawn.lastweapon = self->client->pers.lastweapon;
+			}
 		}
 		else
 		{
