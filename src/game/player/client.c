@@ -1030,6 +1030,8 @@ void
 InitClientPersistant(gclient_t *client)
 {
 	gitem_t *item;
+	edict_t *other;
+	int i, j;
 
 	if (!client)
 	{
@@ -1053,6 +1055,25 @@ InitClientPersistant(gclient_t *client)
 	client->pers.max_grenades = 50;
 	client->pers.max_cells = 200;
 	client->pers.max_slugs = 50;
+
+	if (coop->value && coop_broadcast_weapons->value)
+	{
+		/* give the client all weapons everyone else has */
+		for (i = 0; i < game.maxclients; ++i)
+		{
+			other = &g_edicts[1 + i];
+			if (other->inuse && other->client && !other->client->resp.spectator)
+			{
+				for (j = 0; j < game.num_items; ++j)
+				{
+					if (other->client->pers.inventory[j] && (itemlist[j].flags & IT_WEAPON))
+					{
+						client->pers.inventory[j] = 1;
+					}
+				}
+			}
+		}
+	}
 
 	client->pers.connected = true;
 }
